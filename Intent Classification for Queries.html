@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Help Desk | University Portal</title>
+    <style>
+        :root {
+            --primary-color: #1a5f7a;
+            --secondary-color: #f8f9fa;
+            --bot-bubble: #e9ecef;
+            --user-bubble: #1a5f7a;
+            --text-dark: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        /* --- UI Layout --- */
+        #chat-container {
+            width: 450px;
+            height: 600px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid #ddd;
+        }
+
+        header {
+            background: var(--primary-color);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+        }
+
+        #chat-window {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background: #fff;
+        }
+
+        /* --- Chat Bubbles --- */
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 15px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        .bot-msg {
+            align-self: flex-start;
+            background: var(--bot-bubble);
+            color: var(--text-dark);
+            border-bottom-left-radius: 2px;
+        }
+
+        .user-msg {
+            align-self: flex-end;
+            background: var(--user-bubble);
+            color: white;
+            border-bottom-right-radius: 2px;
+        }
+
+        /* --- Input Area --- */
+        .input-area {
+            padding: 20px;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+        }
+
+        input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            outline: none;
+            transition: border 0.3s;
+        }
+
+        input:focus { border-color: var(--primary-color); }
+
+        button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        button:hover { opacity: 0.9; }
+    </style>
+</head>
+<body>
+
+<div id="chat-container">
+    <header>STUDENT HELP DESK</header>
+    <div id="chat-window">
+        <div class="message bot-msg">Welcome to the Institute Help Desk. How can I assist you with admissions, exams, or campus life today?</div>
+    </div>
+    <div class="input-area">
+        <input type="text" id="user-input" placeholder="Type your query here..." autocomplete="off">
+        <button onclick="handleSend()">Send</button>
+    </div>
+</div>
+
+<script>
+/**
+ * ------------------------------------------------------------
+ * 1. INTENT DATASET (25 Intents)
+ * ------------------------------------------------------------
+ */
+const intents = [
+    { tag: "admissions", patterns: ["how to apply", "admission process", "entry requirements", "apply for course"], response: "Admissions are open! You can apply via our online portal or visit the Registrar's office." },
+    { tag: "fees", patterns: ["tuition cost", "pay my fees", "fee structure", "total charges"], response: "The fee structure varies by department. Please check the 'Finance' section of our website for the 2024-25 breakdown." },
+    { tag: "scholarships", patterns: ["financial aid", "scholarship opportunities", "funding", "merit scholarship"], response: "We offer merit-based and need-based scholarships. Applications close on August 30th." },
+    { tag: "exams", patterns: ["exam schedule", "when are finals", "midterms date", "test timetable"], response: "The semester examination schedule is posted on the digital notice board under the 'Academic' tab." },
+    { tag: "timetable", patterns: ["class schedule", "lecture times", "my timetable", "routine"], response: "You can download your personalized class timetable from the Student ERP portal." },
+    { tag: "results", patterns: ["check my marks", "semester results", "grade sheet", "exam score"], response: "Results are published on the ERP portal 30 days after the final exam date." },
+    { tag: "hostel", patterns: ["accommodation", "hostel rooms", "dormitory", "staying on campus"], response: "Hostel applications are available at the Warden's office. We provide both AC and Non-AC rooms." },
+    { tag: "placements", patterns: ["job opportunities", "career cell", "campus recruitment", "internship placement"], response: "Our Placement Cell coordinates with top firms. Last year, 90% of students were placed with high packages." },
+    { tag: "courses", patterns: ["available degrees", "which programs", "course list", "major options"], response: "We offer Undergraduate, Postgraduate, and PhD programs in Engineering, Arts, and Sciences." },
+    { tag: "faculty", patterns: ["teacher details", "professor list", "staff info", "faculty directory"], response: "Our faculty directory with contact emails is available on the 'About Us' page of our website." },
+    { tag: "contact", patterns: ["phone number", "email address", "how to call", "support contact"], response: "You can reach the main office at (555) 012-3456 or email info@institute.edu." },
+    { tag: "location", patterns: ["where is campus", "directions", "map", "address"], response: "We are located at 123 Education Lane, University City. Check Google Maps for driving directions." },
+    { tag: "holidays", patterns: ["vacation dates", "is college closed", "holiday calendar", "break start"], response: "The academic calendar lists all holidays. The next scheduled break starts on December 15th." },
+    { tag: "library", patterns: ["book issue", "library hours", "study space", "renew books"], response: "The Central Library is open from 8:00 AM to 10:00 PM daily for students." },
+    { tag: "transport", patterns: ["bus route", "college shuttle", "transportation", "parking"], response: "The institute operates shuttle buses on five major city routes. Passes are available at the admin block." },
+    { tag: "attendance", patterns: ["check attendance", "minimum attendance", "shortage", "absent"], response: "A minimum of 75% attendance is mandatory to appear for the final examinations." },
+    { tag: "assignments", patterns: ["homework submission", "upload assignment", "project deadline"], response: "All assignments must be uploaded through the Learning Management System (LMS) before the deadline." },
+    { tag: "internships", patterns: ["summer internship", "industrial training", "work experience"], response: "Students can apply for internships through the Training & Placement cell during the 3rd year." },
+    { tag: "events", patterns: ["college fest", "cultural event", "upcoming workshop", "seminar"], response: "The annual Cultural Fest 'Aura 2024' is scheduled for the last week of October." },
+    { tag: "clubs", patterns: ["student societies", "joining a club", "coding club", "dance group"], response: "There are 15+ student-run clubs. Recruitment drives happen in the first month of the semester." },
+    { tag: "labs", patterns: ["laboratory access", "computer lab", "practical timings"], response: "Specialized labs are open during working hours under the supervision of lab assistants." },
+    { tag: "syllabus", patterns: ["curriculum", "subject list", "what will I study"], response: "Detailed syllabus for every semester is available in the 'Downloads' section of your department page." },
+    { tag: "grading", patterns: ["gpa calculation", "cgpa", "grading system", "passing marks"], response: "We follow a 10-point CGPA grading system. The passing criteria is 40% per subject." },
+    { tag: "revaluation", patterns: ["paper checking", "recounting", "exam appeal", "remarking"], response: "Students can apply for revaluation within 7 days of result declaration by paying a small fee." },
+    { tag: "certificates", patterns: ["degree certificate", "bonafide", "transcript", "documents"], response: "Requests for transcripts and bonafide certificates can be made at the Student Service Window." }
+];
+
+/**
+ * ------------------------------------------------------------
+ * 2. TEXT PREPROCESSING
+ * ------------------------------------------------------------
+ */
+function preprocess(text) {
+    let clean = text.toLowerCase()
+                    .replace(/[^\w\s]/g, "") // Remove punctuation
+                    .split(/\s+/);           // Tokenization
+    
+    // Stopwords list
+    const stopwords = ["the", "is", "a", "at", "how", "can", "i", "to", "for", "on", "of", "in", "my", "what", "are", "you"];
+    
+    // Filtering + Basic Normalization (Lemmatization/Stemming Lite)
+    return clean.filter(word => !stopwords.includes(word))
+                .map(word => {
+                    if (word === "fees") return "fee";
+                    if (word === "exams") return "exam";
+                    if (word === "timetables") return "timetable";
+                    return word;
+                });
+}
+
+/**
+ * ------------------------------------------------------------
+ * 3. VECTORIZATION & SIMILARITY (The "ML" Logic)
+ * ------------------------------------------------------------
+ */
+
+// Step A: Create Vocabulary (Bag of Words approach)
+let allWords = [];
+intents.forEach(intent => {
+    intent.patterns.forEach(phrase => {
+        allWords.push(...preprocess(phrase));
+    });
+});
+const vocabulary = [...new Set(allWords)]; // Unique words only
+
+// Step B: Convert string to Vector
+function textToVector(text) {
+    const tokens = preprocess(text);
+    return vocabulary.map(word => tokens.includes(word) ? 1 : 0);
+}
+
+// Step C: Cosine Similarity calculation
+function getSimilarity(vecA, vecB) {
+    let dotProduct = 0;
+    let normA = 0;
+    let normB = 0;
+    for (let i = 0; i < vecA.length; i++) {
+        dotProduct += vecA[i] * vecB[i];
+        normA += vecA[i] ** 2;
+        normB += vecB[i] ** 2;
+    }
+    if (normA === 0 || normB === 0) return 0;
+    return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+}
+
+/**
+ * ------------------------------------------------------------
+ * 4. CHATBOT ENGINE
+ * ------------------------------------------------------------
+ */
+function getResponse(userInput) {
+    const userVec = textToVector(userInput);
+    let bestMatch = { tag: null, score: 0 };
+    const THRESHOLD = 0.25; // Confidence threshold
+
+    intents.forEach(intent => {
+        intent.patterns.forEach(pattern => {
+            const patternVec = textToVector(pattern);
+            const score = getSimilarity(userVec, patternVec);
+            
+            if (score > bestMatch.score) {
+                bestMatch = { tag: intent.tag, score: score, response: intent.response };
+            }
+        });
+    });
+
+    return bestMatch.score > THRESHOLD ? bestMatch.response : "I'm sorry, I couldn't understand that query. Please try asking about admissions, fees, or exams.";
+}
+
+/**
+ * ------------------------------------------------------------
+ * 5. UI CONTROLS
+ * ------------------------------------------------------------
+ */
+const chatWindow = document.getElementById('chat-window');
+const inputField = document.getElementById('user-input');
+
+function appendMsg(text, type) {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `message ${type}-msg`;
+    msgDiv.innerText = text;
+    chatWindow.appendChild(msgDiv);
+    chatWindow.scrollTop = chatWindow.scrollHeight; // Auto-scroll
+}
+
+function handleSend() {
+    const query = inputField.value.trim();
+    if (!query) return;
+
+    appendMsg(query, 'user');
+    inputField.value = '';
+
+    // Artificial delay for realism
+    setTimeout(() => {
+        const reply = getResponse(query);
+        appendMsg(reply, 'bot');
+    }, 600);
+}
+
+// Enter key support
+inputField.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") handleSend();
+});
+</script>
+
+</body>
+</html>

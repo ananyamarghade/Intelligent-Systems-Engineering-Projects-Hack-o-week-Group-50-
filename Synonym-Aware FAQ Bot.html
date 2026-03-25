@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SIT Nagpur — Help Desk</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+/* ═══════════ RESET ═══════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+
+/* ═══════════ TOKENS ═══════════ */
+:root{
+  --bg:          #0a0f1e;
+  --panel:       #0e1628;
+  --panel2:      #131d35;
+  --border:      rgba(255,255,255,0.07);
+  --accent:      #e8a020;
+  --accent2:     #f0c060;
+  --accent-glow: rgba(232,160,32,0.22);
+  --blue:        #2d6be4;
+  --blue-soft:   rgba(45,107,228,0.15);
+  --white:       #ffffff;
+  --off-white:   #e8edf5;
+  --muted:       #6e7d96;
+  --bubble-bot:  #15213a;
+  --bubble-user: #1e3a6e;
+  --text:        #cdd6e8;
+  --radius:      16px;
+  --radius-sm:   10px;
+}
+
+/* ═══════════ BODY / SCENE ═══════════ */
+body{
+  font-family:'Plus Jakarta Sans',sans-serif;
+  background:var(--bg);
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  overflow:hidden;
+  position:relative;
+}
+
+/* animated background orbs */
+body::before,body::after{
+  content:'';
+  position:fixed;
+  border-radius:50%;
+  filter:blur(90px);
+  pointer-events:none;
+  z-index:0;
+}
+body::before{
+  width:520px;height:520px;
+  background:radial-gradient(circle, rgba(45,107,228,0.18) 0%, transparent 70%);
+  top:-120px; left:-120px;
+  animation:driftA 14s ease-in-out infinite alternate;
+}
+body::after{
+  width:420px;height:420px;
+  background:radial-gradient(circle, rgba(232,160,32,0.14) 0%, transparent 70%);
+  bottom:-100px; right:-80px;
+  animation:driftB 16s ease-in-out infinite alternate;
+}
+@keyframes driftA{to{transform:translate(60px,80px);}}
+@keyframes driftB{to{transform:translate(-50px,-70px);}}
+
+/* floating particles */
+.particles{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+.particle{
+  position:absolute;
+  border-radius:50%;
+  background:rgba(255,255,255,0.04);
+  animation:floatUp linear infinite;
+}
+@keyframes floatUp{
+  0%  {transform:translateY(100vh) scale(0); opacity:0;}
+  10% {opacity:1;}
+  90% {opacity:0.4;}
+  100%{transform:translateY(-10vh) scale(1.2); opacity:0;}
+}
+
+/* ═══════════ SHELL ═══════════ */
+.shell{
+  position:relative;
+  z-index:1;
+  width:100%;
+  max-width:820px;
+  border-radius:24px;
+  overflow:hidden;
+  border:1px solid var(--border);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.04),
+    0 30px 90px rgba(0,0,0,0.7),
+    0 0 60px rgba(45,107,228,0.08);
+  display:flex;
+  flex-direction:column;
+  backdrop-filter:blur(20px);
+  animation:shellIn 0.7s cubic-bezier(0.16,1,0.3,1) both;
+}
+@keyframes shellIn{
+  from{opacity:0;transform:translateY(28px) scale(0.97);}
+  to  {opacity:1;transform:translateY(0) scale(1);}
+}
+
+/* ═══════════ HEADER ═══════════ */
+.header{
+  background:linear-gradient(135deg, #0d1830 0%, #111f3a 60%, #0d1830 100%);
+  border-bottom:1px solid rgba(232,160,32,0.25);
+  padding:20px 24px 16px;
+  position:relative;
+  overflow:hidden;
+}
+/* header shimmer stripe */
+.header::before{
+  content:'';
+  position:absolute;
+  top:0;left:-100%;
+  width:60%;height:2px;
+  background:linear-gradient(90deg, transparent, var(--accent), transparent);
+  animation:shimmer 3.5s ease-in-out infinite;
+}
+@keyframes shimmer{
+  0%  {left:-100%;}
+  100%{left:200%;}
+}
+
+.header-top{display:flex;align-items:center;gap:14px;}
+
+.logo-wrap{
+  position:relative;
+  width:52px;height:52px;flex-shrink:0;
+}
+.logo-ring{
+  position:absolute;inset:0;
+  border-radius:50%;
+  border:2px solid transparent;
+  background:linear-gradient(135deg,var(--accent),var(--blue)) border-box;
+  -webkit-mask:linear-gradient(#fff 0 0) padding-box,linear-gradient(#fff 0 0);
+  -webkit-mask-composite:destination-out;
+  mask-composite:exclude;
+  animation:spin 8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+.logo-inner{
+  position:absolute;inset:4px;
+  border-radius:50%;
+  background:linear-gradient(135deg,#1a2d56,#0d1830);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;
+}
+
+.header-text h1{
+  font-family:'Playfair Display',serif;
+  font-size:1.3rem;
+  color:var(--white);
+  letter-spacing:0.2px;
+  line-height:1.2;
+}
+.header-text .sub{
+  font-size:0.68rem;
+  color:var(--accent2);
+  font-weight:600;
+  letter-spacing:1.4px;
+  text-transform:uppercase;
+  margin-top:3px;
+}
+
+.header-right{
+  margin-left:auto;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:6px;
+}
+.status-badge{
+  display:flex;align-items:center;gap:6px;
+  background:rgba(100,200,120,0.1);
+  border:1px solid rgba(100,200,120,0.25);
+  border-radius:20px;
+  padding:4px 10px;
+  font-size:0.65rem;
+  font-weight:600;
+  color:#7dd87a;
+  letter-spacing:0.5px;
+}
+.dot{
+  width:6px;height:6px;
+  border-radius:50%;
+  background:#7dd87a;
+  animation:blink 2s ease-in-out infinite;
+}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.25;}}
+
+.header-stats{
+  display:flex;gap:12px;
+  font-size:0.62rem;
+  color:var(--muted);
+}
+.stat b{color:var(--accent2);}
+
+/* ═══════════ CHIPS BAR ═══════════ */
+.chips-bar{
+  background:var(--panel);
+  border-bottom:1px solid var(--border);
+  padding:10px 18px;
+  display:flex;gap:7px;flex-wrap:wrap;
+}
+.chip{
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.09);
+  color:var(--text);
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:0.67rem;
+  font-weight:600;
+  letter-spacing:0.4px;
+  padding:5px 12px;
+  border-radius:20px;
+  cursor:pointer;
+  transition:all 0.2s;
+  white-space:nowrap;
+  display:flex;align-items:center;gap:5px;
+}
+.chip:hover{
+  background:var(--blue-soft);
+  border-color:rgba(45,107,228,0.5);
+  color:var(--white);
+  transform:translateY(-1px);
+  box-shadow:0 4px 16px rgba(45,107,228,0.2);
+}
+.chip:active{transform:translateY(0);}
+
+/* ═══════════ CHAT WINDOW ═══════════ */
+.chat-window{
+  background:var(--panel);
+  height:460px;
+  overflow-y:auto;
+  padding:22px 20px;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+  scroll-behavior:smooth;
+  position:relative;
+}
+.chat-window::-webkit-scrollbar{width:4px;}
+.chat-window::-webkit-scrollbar-track{background:transparent;}
+.chat-window::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:99px;}
+.chat-window::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.2);}
+
+/* date divider */
+.date-divider{
+  display:flex;align-items:center;gap:10px;
+  font-size:0.62rem;color:var(--muted);
+  font-weight:600;letter-spacing:0.8px;
+  text-transform:uppercase;
+  margin:4px 0;
+}
+.date-divider::before,.date-divider::after{
+  content:'';flex:1;
+  height:1px;background:var(--border);
+}
+
+/* ═══════════ MESSAGE ROWS ═══════════ */
+.msg-row{
+  display:flex;gap:10px;align-items:flex-end;
+  /* scroll-reveal class added via JS */
+}
+.msg-row.bot {flex-direction:row;}
+.msg-row.user{flex-direction:row-reverse;}
+
+/* ── Scroll-reveal animation ── */
+.msg-row{
+  opacity:0;
+  transform:translateY(16px);
+  transition:opacity 0.38s ease, transform 0.38s cubic-bezier(0.16,1,0.3,1);
+}
+.msg-row.visible{opacity:1;transform:translateY(0);}
+
+/* user messages slide in from right */
+.msg-row.user{transform:translateX(20px) translateY(8px);}
+.msg-row.user.visible{transform:translateX(0) translateY(0);}
+
+/* ── Avatars ── */
+.avatar{
+  width:34px;height:34px;border-radius:50%;
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-size:15px;font-weight:700;
+}
+.bot  .avatar{
+  background:linear-gradient(135deg,#1a3060,#0d1830);
+  border:1px solid rgba(45,107,228,0.3);
+  box-shadow:0 0 12px rgba(45,107,228,0.2);
+}
+.user .avatar{
+  background:linear-gradient(135deg,#1e3060,#0e1e40);
+  border:1px solid rgba(232,160,32,0.3);
+}
+
+/* ── Bubbles ── */
+.bubble-wrap{display:flex;flex-direction:column;gap:4px;max-width:70%;}
+.msg-row.user .bubble-wrap{align-items:flex-end;}
+
+.bubble{
+  padding:12px 16px;
+  border-radius:var(--radius);
+  font-size:0.855rem;
+  line-height:1.6;
+  position:relative;
+  word-break:break-word;
+}
+.bot .bubble{
+  background:var(--bubble-bot);
+  color:var(--off-white);
+  border-bottom-left-radius:4px;
+  border:1px solid rgba(45,107,228,0.15);
+  box-shadow:0 2px 16px rgba(0,0,0,0.3);
+}
+.user .bubble{
+  background:var(--bubble-user);
+  color:var(--off-white);
+  border-bottom-right-radius:4px;
+  border:1px solid rgba(232,160,32,0.15);
+  box-shadow:0 2px 16px rgba(0,0,0,0.3);
+}
+
+.sender-label{
+  font-size:0.6rem;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;
+  margin-bottom:5px;display:block;
+}
+.bot  .sender-label{color:rgba(100,150,255,0.7);}
+.user .sender-label{color:rgba(232,160,32,0.7);}
+
+/* rich text inside bot bubbles */
+.bubble strong{color:var(--accent2);font-weight:600;}
+.bubble em{color:var(--muted);font-style:normal;font-size:0.8rem;}
+.bubble .tag{
+  display:inline-block;
+  background:rgba(45,107,228,0.15);
+  border:1px solid rgba(45,107,228,0.3);
+  color:#7aacff;
+  font-size:0.65rem;font-weight:600;
+  padding:2px 8px;border-radius:99px;
+  margin:1px 2px;
+}
+
+/* timestamp + tick */
+.meta{
+  display:flex;align-items:center;gap:5px;
+  font-size:0.6rem;color:var(--muted);
+}
+.msg-row.user .meta{justify-content:flex-end;}
+
+/* typing indicator */
+.typing-row{display:flex;gap:10px;align-items:flex-end;}
+.typing-bubble{
+  background:var(--bubble-bot);
+  border:1px solid rgba(45,107,228,0.15);
+  border-radius:var(--radius);
+  border-bottom-left-radius:4px;
+  padding:13px 18px;
+  display:flex;gap:5px;align-items:center;
+}
+.typing-bubble span{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--muted);
+  animation:typeDot 1.2s ease-in-out infinite;
+}
+.typing-bubble span:nth-child(2){animation-delay:0.2s;}
+.typing-bubble span:nth-child(3){animation-delay:0.4s;}
+@keyframes typeDot{
+  0%,60%,100%{transform:translateY(0);background:var(--muted);}
+  30%{transform:translateY(-5px);background:var(--accent2);}
+}
+
+/* ═══════════ INPUT ROW ═══════════ */
+.input-row{
+  background:var(--panel2);
+  border-top:1px solid var(--border);
+  padding:14px 18px;
+  display:flex;gap:10px;align-items:center;
+}
+
+#userInput{
+  flex:1;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:var(--radius-sm);
+  padding:12px 16px;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:0.875rem;
+  color:var(--off-white);
+  outline:none;
+  transition:border-color 0.2s, box-shadow 0.2s;
+}
+#userInput::placeholder{color:rgba(255,255,255,0.22);}
+#userInput:focus{
+  border-color:rgba(45,107,228,0.6);
+  box-shadow:0 0 0 3px rgba(45,107,228,0.12);
+}
+
+#sendBtn{
+  width:44px;height:44px;
+  border-radius:var(--radius-sm);
+  background:linear-gradient(135deg,var(--blue),#1a4fa8);
+  border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.2s;
+  flex-shrink:0;
+  box-shadow:0 4px 16px rgba(45,107,228,0.35);
+}
+#sendBtn:hover{
+  background:linear-gradient(135deg,#4080f0,#2060d0);
+  transform:translateY(-1px);
+  box-shadow:0 6px 20px rgba(45,107,228,0.5);
+}
+#sendBtn:active{transform:scale(0.93);}
+
+/* ═══════════ FOOTER ═══════════ */
+.footer{
+  background:var(--panel2);
+  border-top:1px solid var(--border);
+  padding:8px 20px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.footer-left{
+  font-size:0.6rem;color:var(--muted);
+  display:flex;align-items:center;gap:6px;
+}
+.footer-left .dot2{
+  width:5px;height:5px;border-radius:50%;
+  background:var(--accent);opacity:0.6;
+}
+.footer-right{
+  font-size:0.6rem;color:var(--muted);
+  letter-spacing:0.4px;
+}
+.footer-right span{color:var(--accent2);}
+
+/* ═══════════ SUGGESTION PILLS (after bot reply) ═══════════ */
+.suggestions{
+  display:flex;gap:7px;flex-wrap:wrap;margin-top:8px;
+}
+.sugg-pill{
+  background:rgba(45,107,228,0.1);
+  border:1px solid rgba(45,107,228,0.25);
+  color:#89b3ff;
+  font-size:0.68rem;font-weight:600;
+  padding:4px 11px;border-radius:99px;
+  cursor:pointer;
+  transition:all 0.18s;
+  display:flex;align-items:center;gap:4px;
+}
+.sugg-pill:hover{
+  background:rgba(45,107,228,0.25);
+  border-color:rgba(45,107,228,0.5);
+  color:var(--white);
+  transform:translateY(-1px);
+}
+</style>
+</head>
+<body>
+
+<!-- Floating particles -->
+<div class="particles" id="particles"></div>
+
+<div class="shell">
+
+  <!-- ── HEADER ── -->
+  <div class="header">
+    <div class="header-top">
+      <div class="logo-wrap">
+        <div class="logo-ring"></div>
+        <div class="logo-inner">🎓</div>
+      </div>
+      <div class="header-text">
+        <h1>Symbiosis Institute of Technology</h1>
+        <div class="sub">Nagpur Campus · Help Desk Portal</div>
+      </div>
+      <div class="header-right">
+        <div class="status-badge"><span class="dot"></span>Online Now</div>
+        <div class="header-stats">
+          <div class="stat"><b>24/7</b> Support</div>
+          <div class="stat"><b>15+</b> Topics</div>
+          <div class="stat"><b>Instant</b> Replies</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CHIPS BAR ── -->
+  <div class="chips-bar">
+    <span class="chip" onclick="sendChip('fees')">💰 Fees</span>
+    <span class="chip" onclick="sendChip('timings')">🕐 Timings</span>
+    <span class="chip" onclick="sendChip('courses')">📚 Courses</span>
+    <span class="chip" onclick="sendChip('admission')">📝 Admission</span>
+    <span class="chip" onclick="sendChip('contact')">📞 Contact</span>
+    <span class="chip" onclick="sendChip('location')">📍 Location</span>
+    <span class="chip" onclick="sendChip('hostel')">🏠 Hostel</span>
+    <span class="chip" onclick="sendChip('placements')">💼 Placements</span>
+    <span class="chip" onclick="sendChip('faculty')">👨‍🏫 Faculty</span>
+    <span class="chip" onclick="sendChip('library')">📖 Library</span>
+    <span class="chip" onclick="sendChip('exam')">📋 Exams</span>
+  </div>
+
+  <!-- ── CHAT WINDOW ── -->
+  <div class="chat-window" id="chatWindow">
+    <div class="date-divider">Today</div>
+  </div>
+
+  <!-- ── INPUT ── -->
+  <div class="input-row">
+    <input id="userInput" type="text"
+      placeholder="Ask about fees, admission, placements…"
+      autocomplete="off"
+      onkeydown="if(event.key==='Enter')handleSend()"/>
+    <button id="sendBtn" onclick="handleSend()" title="Send">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+        stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="22" y1="2" x2="11" y2="13"/>
+        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- ── FOOTER ── -->
+  <div class="footer">
+    <div class="footer-left">
+      <div class="dot2"></div>
+      Rule-based · Synonym-aware · No AI/ML
+    </div>
+    <div class="footer-right">SIT Nagpur © 2025 · <span>Academic Assistant</span></div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   §1  STOPWORDS
+══════════════════════════════════════════════════════════════ */
+const STOPWORDS=new Set([
+  "is","the","and","a","an","of","to","in","for","on","at","by","from",
+  "with","about","what","how","can","i","me","my","we","you","your",
+  "tell","please","know","want","need","do","does","are","be","was",
+  "get","give","have","has","it","its","this","that","there","here",
+  "which","where","when","who","why","will","would","could","should",
+  "any","all","more","also","not","or","so","if","then","than","too",
+  "us","our","they","them","their","he","she","his","her","just","really",
+  "very","much","many","some","few","new","old","good","great","bad"
+]);
+
+/* ══════════════════════════════════════════════════════════════
+   §2  NORMALIZATION MAP
+══════════════════════════════════════════════════════════════ */
+const NORMALIZE={
+  "fees":"fee","timings":"timing","courses":"course","programs":"program",
+  "degrees":"degree","branches":"branch","placements":"placement",
+  "hostels":"hostel","admissions":"admission","contacts":"contact",
+  "locations":"location","exams":"exam","examinations":"exam",
+  "faculties":"faculty","professors":"professor","libraries":"library",
+  "activities":"activity","events":"event","workshops":"workshop",
+  "labs":"lab","laboratories":"lab","scholarships":"scholarship",
+  "internships":"internship","companies":"company","colleges":"college",
+  "universities":"university","students":"student","teachers":"teacher",
+  "clubs":"club","sports":"sport","facilities":"facility","buses":"bus",
+  "transports":"transport","rules":"rule","regulations":"regulation"
+};
+
+/* ══════════════════════════════════════════════════════════════
+   §3  SYNONYM → INTENT MAP (120+ synonyms across 15 intents)
+══════════════════════════════════════════════════════════════ */
+const SYNONYMS={
+  // FEES
+  "fee":"fees","tuition":"fees","payment":"fees","cost":"fees",
+  "charge":"fees","price":"fees","amount":"fees","expense":"fees",
+  "money":"fees","scholarship":"fees","financial":"fees","aid":"fees",
+  "waiver":"fees","concession":"fees","installment":"fees","pay":"fees",
+  "paid":"fees","paying":"fees","afford":"fees","structure":"fees",
+
+  // TIMING
+  "timing":"timing","time":"timing","schedule":"timing","hours":"timing",
+  "hour":"timing","open":"timing","class":"timing","session":"timing",
+  "batch":"timing","timetable":"timing","working":"timing","office":"timing",
+  "days":"timing","week":"timing","weekend":"timing","duration":"timing",
+
+  // COURSES
+  "course":"courses","program":"courses","degree":"courses","branch":"courses",
+  "department":"courses","subject":"courses","stream":"courses",
+  "specialization":"courses","curriculum":"courses","syllabus":"courses",
+  "btech":"courses","mtech":"courses","mba":"courses","mca":"courses",
+  "engineering":"courses","technology":"courses","offered":"courses",
+  "available":"courses","study":"courses","discipline":"courses",
+
+  // ADMISSION
+  "admission":"admission","apply":"admission","enroll":"admission",
+  "enrollment":"admission","registration":"admission","register":"admission",
+  "join":"admission","intake":"admission","eligible":"admission",
+  "eligibility":"admission","criteria":"admission","merit":"admission",
+  "entrance":"admission","jee":"admission","neet":"admission","cat":"admission",
+  "cutoff":"admission","rank":"admission","seat":"admission","quota":"admission",
+  "document":"admission","form":"admission","portal":"admission","cap":"admission",
+
+  // CONTACT
+  "contact":"contact","phone":"contact","email":"contact","mail":"contact",
+  "number":"contact","reach":"contact","helpline":"contact","support":"contact",
+  "call":"contact","enquiry":"contact","query":"contact","whatsapp":"contact",
+  "website":"contact","online":"contact","message":"contact",
+
+  // LOCATION
+  "location":"location","address":"location","place":"location",
+  "situated":"location","campus":"location","city":"location","map":"location",
+  "direction":"location","near":"location","route":"location","nagpur":"location",
+  "distance":"location","transport":"location","bus":"location","reach":"location",
+  "station":"location","airport":"location","area":"location","zone":"location",
+
+  // HOSTEL
+  "hostel":"hostel","accommodation":"hostel","stay":"hostel",
+  "dormitory":"hostel","dorm":"hostel","pg":"hostel","lodging":"hostel",
+  "room":"hostel","boarding":"hostel","resident":"hostel","residential":"hostel",
+  "mess":"hostel","food":"hostel","canteen":"hostel","warden":"hostel",
+  "curfew":"hostel","security":"hostel","wifi":"hostel","facility":"hostel",
+
+  // PLACEMENTS
+  "placement":"placements","job":"placements","career":"placements",
+  "recruit":"placements","internship":"placements","intern":"placements",
+  "company":"placements","hire":"placements","hired":"placements",
+  "package":"placements","salary":"placements","ctc":"placements",
+  "lpa":"placements","offer":"placements","drive":"placements",
+  "interview":"placements","tnp":"placements","training":"placements",
+  "industry":"placements","corporate":"placements","recruit":"placements",
+  "placed":"placements","opportunity":"placements","dream":"placements",
+
+  // FACULTY
+  "faculty":"faculty","professor":"faculty","teacher":"faculty",
+  "lecturer":"faculty","instructor":"faculty","staff":"faculty",
+  "hod":"faculty","head":"faculty","doctor":"faculty","dr":"faculty",
+  "phd":"faculty","expertise":"faculty","qualification":"faculty",
+  "research":"faculty","guide":"faculty","mentor":"faculty",
+
+  // LIBRARY
+  "library":"library","book":"library","journal":"library","magazine":"library",
+  "digital":"library","e-book":"library","ebook":"library","resource":"library",
+  "reading":"library","borrow":"library","issue":"library","catalog":"library",
+  "nptel":"library","ieee":"library","springer":"library",
+
+  // EXAM
+  "exam":"exam","examination":"exam","test":"exam","assessment":"exam",
+  "result":"exam","marks":"exam","grade":"exam","cgpa":"exam","sgpa":"exam",
+  "backlog":"exam","revaluation":"exam","hall":"exam","ticket":"exam",
+  "schedule":"exam","paper":"exam","pattern":"exam","theory":"exam",
+  "practical":"exam","viva":"exam","lab":"exam","semester":"exam",
+
+  // EXTRACURRICULAR / CLUBS
+  "club":"extracurricular","sport":"extracurricular","activity":"extracurricular",
+  "event":"extracurricular","cultural":"extracurricular","technical":"extracurricular",
+  "fest":"extracurricular","workshop":"extracurricular","hackathon":"extracurricular",
+  "nss":"extracurricular","ncc":"extracurricular","committee":"extracurricular",
+  "team":"extracurricular","participation":"extracurricular","competition":"extracurricular",
+
+  // INFRASTRUCTURE / FACILITIES
+  "infrastructure":"infrastructure","lab":"infrastructure","laboratory":"infrastructure",
+  "gymnasium":"infrastructure","gym":"infrastructure","swimming":"infrastructure",
+  "pool":"infrastructure","playground":"infrastructure","ground":"infrastructure",
+  "auditorium":"infrastructure","seminar":"infrastructure","hall":"infrastructure",
+  "cafeteria":"infrastructure","atm":"infrastructure","bank":"infrastructure",
+  "medical":"infrastructure","hospital":"infrastructure","clinic":"infrastructure",
+  "transport":"infrastructure","wifi":"infrastructure","internet":"infrastructure",
+
+  // ABOUT / GENERAL
+  "about":"about","symbiosis":"about","sit":"about","institute":"about",
+  "college":"about","university":"about","established":"about","history":"about",
+  "naac":"about","nba":"about","accreditation":"about","ranking":"about",
+  "rank":"about","autonomous":"about","affiliated":"about","recognition":"about"
+};
+
+/* ══════════════════════════════════════════════════════════════
+   §4  RESPONSE BANK — SIT Nagpur specific answers
+══════════════════════════════════════════════════════════════ */
+const RESPONSES={
+  fees:`<span class="sender-label">Help Desk</span>
+    <strong>💰 Fee Structure — SIT Nagpur (2024–25)</strong><br><br>
+    <b>B.Tech Programs:</b><br>
+    • Computer Science & Engineering: ₹1,85,000/year<br>
+    • Electronics & Telecom: ₹1,80,000/year<br>
+    • Mechanical Engineering: ₹1,75,000/year<br>
+    • Civil Engineering: ₹1,70,000/year<br><br>
+    <b>Postgraduate:</b><br>
+    • M.Tech: ₹1,40,000/year<br>
+    • MBA: ₹2,10,000/year<br>
+    • MCA: ₹1,30,000/year<br><br>
+    <b>Additional Charges:</b> Registration ₹5,000 · Library ₹3,500 · Lab ₹8,000<br><br>
+    <em>💡 Merit scholarships, SC/ST concessions & installment options available. Contact accounts office.</em>`,
+
+  timing:`<span class="sender-label">Help Desk</span>
+    <strong>🕐 Institute Timings</strong><br><br>
+    <b>Academic Hours:</b> Mon–Sat · 8:00 AM – 5:30 PM<br>
+    <b>Administration:</b> Mon–Fri · 9:00 AM – 5:00 PM<br>
+    <b>Examination Cell:</b> Mon–Fri · 10:00 AM – 4:00 PM<br>
+    <b>Library:</b> Mon–Sat · 8:00 AM – 9:00 PM<br>
+    <b>Hostel Gate:</b> Open till 10:00 PM<br>
+    <b>Canteen:</b> 7:30 AM – 8:00 PM<br><br>
+    <em>📅 Sunday & gazetted holidays: Closed. Exam schedule communicated via student portal.</em>`,
+
+  courses:`<span class="sender-label">Help Desk</span>
+    <strong>📚 Programs at SIT Nagpur</strong><br><br>
+    <b>🔷 Undergraduate (4-yr B.Tech):</b><br>
+    • Computer Science & Engineering<br>
+    • AI & Machine Learning<br>
+    • Electronics & Telecommunication<br>
+    • Mechanical Engineering<br>
+    • Civil Engineering<br>
+    • Electrical Engineering<br><br>
+    <b>🔶 Postgraduate:</b><br>
+    • M.Tech — CSE, VLSI, Thermal Engineering<br>
+    • MBA — Marketing · Finance · HR · Operations<br>
+    • MCA (3-year lateral entry available)<br><br>
+    <b>🔸 Doctoral (Ph.D):</b> Available in all engineering & management streams<br><br>
+    <em>All programs affiliated to Symbiosis International (Deemed University), accredited by NAAC A++.</em>`,
+
+  admission:`<span class="sender-label">Help Desk</span>
+    <strong>📝 Admission Process — SIT Nagpur</strong><br><br>
+    <b>For B.Tech:</b><br>
+    1️⃣ Qualify JEE Main / MHT-CET / SITEEE<br>
+    2️⃣ Register at <em>admissions.sitpune.edu.in</em><br>
+    3️⃣ Appear for SITEEE (SIT Entrance Exam)<br>
+    4️⃣ Counselling + Document Verification<br>
+    5️⃣ Fee Payment & Seat Confirmation<br><br>
+    <b>Eligibility:</b> 10+2 (PCM) with ≥45% marks (40% for reserved categories)<br><br>
+    <b>For MBA:</b> Graduation + SNAP Score + GD/PI<br>
+    <b>For MCA:</b> B.Sc./BCA/B.Tech + MCA CET<br><br>
+    <b>Admission Helpline:</b> +91 712-660-1200<br>
+    <em>📆 Admissions open: May – August (academic year starting July)</em>`,
+
+  contact:`<span class="sender-label">Help Desk</span>
+    <strong>📞 Contact — SIT Nagpur</strong><br><br>
+    <b>Main Reception:</b> +91 712-660-1100<br>
+    <b>Admissions Cell:</b> +91 712-660-1200<br>
+    <b>Exam Controller:</b> +91 712-660-1300<br>
+    <b>T&P Cell:</b> +91 712-660-1400<br>
+    <b>Hostel Office:</b> +91 712-660-1500<br><br>
+    <b>Email:</b> info.nagpur@sitpune.edu.in<br>
+    <b>Admissions:</b> admissions.nagpur@sitpune.edu.in<br>
+    <b>Website:</b> www.sitpune.edu.in/nagpur<br><br>
+    <em>📍 Office hours: Mon–Fri, 9 AM – 5 PM. Walk-ins welcome at Admin Block, Room 102.</em>`,
+
+  location:`<span class="sender-label">Help Desk</span>
+    <strong>📍 Campus Location</strong><br><br>
+    <b>Symbiosis Institute of Technology, Nagpur</b><br>
+    Survey No. 12, Gram: Wathoda,<br>
+    Nagpur–Wardha Road, Nagpur – 441108<br>
+    Maharashtra, India<br><br>
+    <b>🚉 From Nagpur Railway Station:</b> ~18 km (30–40 min)<br>
+    <b>✈️ From Airport:</b> ~22 km (35–45 min)<br>
+    <b>🚌 From Nagpur Bus Stand:</b> ~16 km (25–35 min)<br><br>
+    <b>College Bus Routes:</b> 12+ pick-up points across Nagpur city<br><br>
+    <em>🗺️ Search "SIT Nagpur Wathoda" on Google Maps for turn-by-turn navigation.</em>`,
+
+  hostel:`<span class="sender-label">Help Desk</span>
+    <strong>🏠 Hostel & Residential Facilities</strong><br><br>
+    On-campus hostels for <b>Boys & Girls</b> (separate, secure blocks).<br><br>
+    <b>🔑 Amenities:</b><br>
+    • High-speed Wi-Fi (100 Mbps) · 24×7 power backup<br>
+    • Fully equipped mess (veg + non-veg + Jain options)<br>
+    • Gymnasium · Laundry · Reading room<br>
+    • Indoor games · TV lounge · Medical room<br>
+    • CCTV surveillance · Biometric entry · 24/7 security<br><br>
+    <b>Annual Charges (2024–25):</b><br>
+    • Double occupancy + Mess: ₹80,000/year<br>
+    • Single occupancy + Mess: ₹1,10,000/year<br><br>
+    <b>Capacity:</b> 800 boys · 500 girls<br>
+    <em>🔔 Apply for hostel during admission. Early apply recommended — seats fill fast.</em>`,
+
+  placements:`<span class="sender-label">Help Desk</span>
+    <strong>💼 Placements — SIT Nagpur (2023–24)</strong><br><br>
+    <b>📊 Key Stats:</b><br>
+    • Students placed: 520 / 580 eligible<br>
+    • Highest package: <strong>₹42 LPA</strong><br>
+    • Average package: <strong>₹8.6 LPA</strong><br>
+    • Companies visited: <strong>110+</strong><br><br>
+    <b>🏢 Top Recruiters:</b><br>
+    TCS · Infosys · Wipro · Capgemini · Accenture ·
+    Cognizant · L&T Infotech · Bajaj · KPIT · Persistent ·
+    HCL · Deloitte · Amazon · Honeywell · Bosch<br><br>
+    <b>📌 Pre-Placement:</b> Mock interviews, aptitude training & soft skills from Sem 5<br>
+    <b>🌐 Internships:</b> Facilitated in 6th semester (stipend ₹5,000–₹25,000/month)<br><br>
+    <em>Contact T&P Cell: tnp.nagpur@sitpune.edu.in · +91 712-660-1400</em>`,
+
+  faculty:`<span class="sender-label">Help Desk</span>
+    <strong>👨‍🏫 Faculty — SIT Nagpur</strong><br><br>
+    SIT Nagpur boasts <b>120+ highly qualified faculty members</b>.<br><br>
+    <b>Qualifications:</b><br>
+    • 70% faculty hold Ph.D. from IITs / NITs / reputed universities<br>
+    • Average industry experience: 8+ years<br>
+    • Several faculty members are IEEE, ISTE, and IEI members<br><br>
+    <b>Research Output (2023):</b><br>
+    • 200+ research papers in Scopus-indexed journals<br>
+    • 15+ patents filed · 3 patents granted<br>
+    • Active funded projects worth ₹2.5 Cr+<br><br>
+    <em>Faculty profiles available at: www.sitpune.edu.in/nagpur/faculty</em>`,
+
+  library:`<span class="sender-label">Help Desk</span>
+    <strong>📖 Central Library — SIT Nagpur</strong><br><br>
+    <b>📚 Collection:</b><br>
+    • 45,000+ books · 200+ national & international journals<br>
+    • Full access to IEEE Xplore, Springer, Elsevier, NPTEL<br>
+    • E-book subscriptions: Wiley, Taylor & Francis, McGraw-Hill<br><br>
+    <b>🕐 Timings:</b> Mon–Sat: 8:00 AM – 9:00 PM<br><br>
+    <b>Services:</b><br>
+    • Issue/Return: up to 4 books (7 days)<br>
+    • Digital Lab: 60 computers · 24-hour internet<br>
+    • Inter-library loan · Photocopying · Printing<br><br>
+    <em>💻 E-resources accessible remotely via student portal login.</em>`,
+
+  exam:`<span class="sender-label">Help Desk</span>
+    <strong>📋 Examinations — SIT Nagpur</strong><br><br>
+    <b>Exam Pattern (B.Tech):</b><br>
+    • 2 unit tests per semester (20 marks each)<br>
+    • End-Semester Exam: 60 marks (Theory)<br>
+    • Practical/Viva: 20–30 marks<br>
+    • Total: 100 marks per subject<br><br>
+    <b>Grading:</b> 10-point CGPA scale (SIU pattern)<br>
+    • O (Outstanding): 10 · A+ : 9 · A: 8 · B+: 7 · B: 6 · C: 5<br><br>
+    <b>Results:</b> Declared within 45 days on student portal<br>
+    <b>Revaluation:</b> Apply within 15 days of result declaration (₹500/paper)<br><br>
+    <em>📅 Hall tickets issued 7 days before exams via student login portal.</em>`,
+
+  extracurricular:`<span class="sender-label">Help Desk</span>
+    <strong>🎭 Clubs & Student Activities</strong><br><br>
+    SIT Nagpur has <b>25+ active student clubs</b>:<br><br>
+    <b>Technical Clubs:</b><br>
+    • Robotics Club · Coding Club · IoT Lab · AI/ML Society<br>
+    • SAE (Automotive) · IEEE Student Branch<br><br>
+    <b>Cultural & Arts:</b><br>
+    • Dance · Music · Drama · Fine Arts · Photography<br><br>
+    <b>Sports:</b> Cricket · Football · Badminton · Basketball · Chess · Athletics<br><br>
+    <b>Annual Events:</b><br>
+    • <em>Synergy</em> – Technical Fest · <em>Rhythms</em> – Cultural Fest<br>
+    • National-level Hackathons · Model United Nations<br><br>
+    <em>All students encouraged to join at least 1 club (CCA credits awarded).</em>`,
+
+  infrastructure:`<span class="sender-label">Help Desk</span>
+    <strong>🏛️ Infrastructure & Facilities</strong><br><br>
+    <b>Academic:</b><br>
+    • 20+ fully equipped labs (CSE, ECE, Mechanical, Civil)<br>
+    • Smart classrooms with projectors & interactive boards<br>
+    • Innovation & Incubation Centre (SIT iHUB)<br><br>
+    <b>Sports & Recreation:</b><br>
+    • FIFA-standard football ground · Cricket pitch<br>
+    • Badminton / Basketball courts · Gymnasium · Swimming pool<br><br>
+    <b>Campus Amenities:</b><br>
+    • 24/7 high-speed Wi-Fi (campus-wide) · ATM · Bank branch<br>
+    • Medical centre with full-time nurse & visiting doctor<br>
+    • Cafeteria · Stationery shop · Transport facility<br><br>
+    <em>Total campus area: 25+ acres (Nagpur campus)</em>`,
+
+  about:`<span class="sender-label">Help Desk</span>
+    <strong>🎓 About SIT Nagpur</strong><br><br>
+    <b>Symbiosis Institute of Technology, Nagpur</b> is a constituent of
+    <b>Symbiosis International (Deemed University)</b>, Pune — one of India's
+    premier private universities.<br><br>
+    <b>Highlights:</b><br>
+    • Established: 2008 (Pune) | Nagpur campus: 2018<br>
+    • Accreditation: <strong>NAAC A++</strong> · NBA Accredited programs<br>
+    • NIRF Ranking: Top 100 Engineering Institutes (India)<br>
+    • Approvals: AICTE · UGC<br>
+    • Part of Symbiosis Society (est. 1971)<br><br>
+    <b>Vision:</b> "Fostering Global Citizens through Excellence in Technology Education"<br><br>
+    <em>More at: www.sitpune.edu.in/nagpur</em>`
+};
+
+/* ══════════════════════════════════════════════════════════════
+   §5  FOLLOW-UP SUGGESTIONS per intent
+══════════════════════════════════════════════════════════════ */
+const SUGGESTIONS={
+  fees:     [["📝 Admission","admission"],["💼 Placements","placements"],["🏠 Hostel","hostel"]],
+  timing:   [["📚 Courses","courses"],["📖 Library","library"],["📞 Contact","contact"]],
+  courses:  [["📝 Admission","admission"],["💰 Fees","fees"],["👨‍🏫 Faculty","faculty"]],
+  admission:[["💰 Fees","fees"],["📍 Location","location"],["📞 Contact","contact"]],
+  contact:  [["📍 Location","location"],["📝 Admission","admission"],["🎓 About","about"]],
+  location: [["🏠 Hostel","hostel"],["📞 Contact","contact"],["🚌 Timings","timings"]],
+  hostel:   [["💰 Fees","fees"],["📍 Location","location"],["📋 Exams","exam"]],
+  placements:[["📚 Courses","courses"],["👨‍🏫 Faculty","faculty"],["🏛️ Infrastructure","infrastructure"]],
+  faculty:  [["📚 Courses","courses"],["🎓 About","about"],["📖 Library","library"]],
+  library:  [["📋 Exams","exam"],["🕐 Timings","timings"],["📚 Courses","courses"]],
+  exam:     [["📊 Results","result"],["📞 Contact","contact"],["🕐 Timings","timings"]],
+  extracurricular:[["🏛️ Infrastructure","infrastructure"],["📍 Location","location"],["💼 Placements","placements"]],
+  infrastructure:[["🏠 Hostel","hostel"],["📍 Location","location"],["🎓 About","about"]],
+  about:    [["📝 Admission","admission"],["📚 Courses","courses"],["💼 Placements","placements"]]
+};
+
+/* ══════════════════════════════════════════════════════════════
+   §6  TEXT PREPROCESSING PIPELINE
+══════════════════════════════════════════════════════════════ */
+function preprocess(text){
+  // Step 1: lowercase
+  let t=text.toLowerCase();
+  // Step 2: remove punctuation
+  t=t.replace(/[^a-z0-9\s]/g," ");
+  // Step 3: tokenize
+  let tokens=t.split(/\s+/).filter(Boolean);
+  // Step 4: remove stopwords
+  tokens=tokens.filter(tok=>!STOPWORDS.has(tok));
+  // Step 5: normalize
+  tokens=tokens.map(tok=>NORMALIZE[tok]||tok);
+  return tokens;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   §7  INTENT MATCHING — synonym-aware, priority-ordered
+══════════════════════════════════════════════════════════════ */
+const PRIORITY=["fees","admission","placements","courses","hostel",
+  "timing","contact","location","exam","faculty","library",
+  "extracurricular","infrastructure","about"];
+
+function matchIntent(tokens){
+  const found=new Set();
+  for(const tok of tokens){
+    const intent=SYNONYMS[tok];
+    if(intent) found.add(intent);
+  }
+  for(const p of PRIORITY){
+    if(found.has(p)) return p;
+  }
+  return null;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   §8  BOT LOGIC — greeting / thanks / fallback
+══════════════════════════════════════════════════════════════ */
+const GREET_WORDS=new Set(["hi","hello","hey","greetings","howdy","sup","namaste","hii","helo"]);
+const THANKS_WORDS=new Set(["thanks","thank","thankyou","thx","ty","appreciate","grateful","cheers"]);
+const BYE_WORDS=new Set(["bye","goodbye","exit","quit","cya","later","done","finished"]);
+
+function getBotReply(userText){
+  const tokens=preprocess(userText);
+
+  if(tokens.some(t=>GREET_WORDS.has(t))){
+    return {
+      html:`<span class="sender-label">Help Desk</span>
+        Hello! 👋 Welcome to <strong>SIT Nagpur Help Desk</strong>.<br><br>
+        I can instantly answer questions about:<br>
+        <span class="tag">💰 Fees</span><span class="tag">📚 Courses</span>
+        <span class="tag">📝 Admission</span><span class="tag">💼 Placements</span>
+        <span class="tag">🏠 Hostel</span><span class="tag">📍 Location</span>
+        <span class="tag">👨‍🏫 Faculty</span><span class="tag">🏛️ Infrastructure</span>
+        <span class="tag">📋 Exams</span><span class="tag">🎓 About SIT</span><br><br>
+        <em>Type your question or tap a chip above to begin!</em>`,
+      intent:null
+    };
+  }
+
+  if(tokens.some(t=>THANKS_WORDS.has(t))){
+    return {
+      html:`<span class="sender-label">Help Desk</span>
+        You're welcome! 😊 Happy to help anytime.<br>
+        <em>Feel free to ask more questions about SIT Nagpur.</em>`,
+      intent:null
+    };
+  }
+
+  if(tokens.some(t=>BYE_WORDS.has(t))){
+    return {
+      html:`<span class="sender-label">Help Desk</span>
+        Goodbye! 👋 Best of luck with your journey at SIT Nagpur!<br>
+        <em>Come back anytime you have questions.</em>`,
+      intent:null
+    };
+  }
+
+  const intent=matchIntent(tokens);
+  if(intent && RESPONSES[intent]){
+    return {html:RESPONSES[intent], intent};
+  }
+
+  return {
+    html:`<span class="sender-label">Help Desk</span>
+      Sorry, I didn't quite catch that. 🤔<br>
+      I specialise in SIT Nagpur topics such as:<br>
+      <span class="tag">Fees</span><span class="tag">Admission</span>
+      <span class="tag">Courses</span><span class="tag">Placements</span>
+      <span class="tag">Hostel</span><span class="tag">Timings</span>
+      <span class="tag">Faculty</span><span class="tag">Exams</span><br><br>
+      <em>Try rephrasing or tap a quick-chip above.</em>`,
+    intent:null
+  };
+}
+
+/* ══════════════════════════════════════════════════════════════
+   §9  SCROLL-REVEAL using IntersectionObserver
+══════════════════════════════════════════════════════════════ */
+const revealObserver=new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.classList.add('visible');
+      revealObserver.unobserve(e.target);
+    }
+  });
+},{root:document.getElementById('chatWindow'),threshold:0.1});
+
+/* ══════════════════════════════════════════════════════════════
+   §10  UI HELPERS
+══════════════════════════════════════════════════════════════ */
+function getTime(){
+  const n=new Date();
+  return n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0');
+}
+
+function appendMessage(htmlContent, type, intent=null){
+  const win=document.getElementById('chatWindow');
+
+  const row=document.createElement('div');
+  row.className=`msg-row ${type}`;
+
+  const av=document.createElement('div');
+  av.className='avatar';
+  av.textContent=type==='bot'?'🎓':'👤';
+
+  const bWrap=document.createElement('div');
+  bWrap.className='bubble-wrap';
+
+  const bub=document.createElement('div');
+  bub.className='bubble';
+  bub.innerHTML=htmlContent;
+
+  bWrap.appendChild(bub);
+
+  // Suggestion pills after bot reply
+  if(type==='bot' && intent && SUGGESTIONS[intent]){
+    const suggDiv=document.createElement('div');
+    suggDiv.className='suggestions';
+    SUGGESTIONS[intent].forEach(([label,query])=>{
+      const p=document.createElement('span');
+      p.className='sugg-pill';
+      p.textContent=label;
+      p.onclick=()=>sendChip(query);
+      suggDiv.appendChild(p);
+    });
+    bWrap.appendChild(suggDiv);
+  }
+
+  const meta=document.createElement('div');
+  meta.className='meta';
+  meta.innerHTML=`<span>${getTime()}</span>`;
+
+  row.appendChild(av);
+  row.appendChild(bWrap);
+  row.appendChild(meta);
+  win.appendChild(row);
+
+  // Register for scroll-reveal
+  revealObserver.observe(row);
+
+  // Stagger-reveal immediately for first paint (already in viewport)
+  setTimeout(()=>row.classList.add('visible'),50);
+
+  win.scrollTo({top:win.scrollHeight, behavior:'smooth'});
+}
+
+function showTyping(){
+  const win=document.getElementById('chatWindow');
+  const row=document.createElement('div');
+  row.className='typing-row';
+  row.id='typingRow';
+  const av=document.createElement('div');
+  av.className='avatar'; av.style.cssText='width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#1a3060,#0d1830);border:1px solid rgba(45,107,228,0.3);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;';
+  av.textContent='🎓';
+  const tb=document.createElement('div');
+  tb.className='typing-bubble';
+  tb.innerHTML='<span></span><span></span><span></span>';
+  row.appendChild(av); row.appendChild(tb);
+  win.appendChild(row);
+  win.scrollTo({top:win.scrollHeight,behavior:'smooth'});
+}
+
+function removeTyping(){
+  const t=document.getElementById('typingRow');
+  if(t) t.remove();
+}
+
+function handleSend(){
+  const input=document.getElementById('userInput');
+  const text=input.value.trim();
+  if(!text) return;
+
+  appendMessage(text,'user');
+  input.value='';
+  input.focus();
+
+  showTyping();
+  setTimeout(()=>{
+    removeTyping();
+    const {html,intent}=getBotReply(text);
+    appendMessage(html,'bot',intent);
+  }, 700+Math.random()*400);
+}
+
+function sendChip(topic){
+  const labels={
+    fees:'Tell me about fees',
+    timings:'What are the timings?',
+    courses:'What courses are offered?',
+    admission:'How do I get admission?',
+    contact:'How can I contact?',
+    location:'Where is SIT Nagpur?',
+    hostel:'Tell me about hostels',
+    placements:'How are placements?',
+    faculty:'Tell me about faculty',
+    library:'Tell me about the library',
+    exam:'What about exams?',
+    about:'Tell me about SIT',
+    infrastructure:'What are the facilities?',
+    extracurricular:'What clubs are there?',
+    result:'How do I check results?'
+  };
+  const display=labels[topic]||topic;
+  appendMessage(display,'user');
+
+  showTyping();
+  setTimeout(()=>{
+    removeTyping();
+    const{html,intent}=getBotReply(topic);
+    appendMessage(html,'bot',intent);
+  },600+Math.random()*300);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   §11  PARTICLE GENERATOR
+══════════════════════════════════════════════════════════════ */
+(function spawnParticles(){
+  const container=document.getElementById('particles');
+  for(let i=0;i<18;i++){
+    const p=document.createElement('div');
+    p.className='particle';
+    const size=Math.random()*5+2;
+    p.style.cssText=`
+      width:${size}px;height:${size}px;
+      left:${Math.random()*100}%;
+      animation-duration:${12+Math.random()*18}s;
+      animation-delay:${Math.random()*15}s;
+      opacity:${Math.random()*0.5};
+    `;
+    container.appendChild(p);
+  }
+})();
+
+/* ══════════════════════════════════════════════════════════════
+   §12  WELCOME MESSAGE
+══════════════════════════════════════════════════════════════ */
+window.addEventListener('DOMContentLoaded',()=>{
+  setTimeout(()=>{
+    appendMessage(
+      `<span class="sender-label">Help Desk</span>
+      Welcome to <strong>SIT Nagpur</strong> — Symbiosis Institute of Technology! 🎓<br><br>
+      I'm your virtual helpdesk assistant. I can answer questions about<br>
+      <span class="tag">Fees</span><span class="tag">Courses</span>
+      <span class="tag">Admissions</span><span class="tag">Placements</span>
+      <span class="tag">Hostel</span><span class="tag">Location</span>
+      <span class="tag">Exams</span><span class="tag">Faculty</span>
+      <span class="tag">Library</span> and more!<br><br>
+      <em>Use the chips above or type your question below ↓</em>`,
+      'bot', null
+    );
+  },500);
+});
+</script>
+</body>
+</html>
