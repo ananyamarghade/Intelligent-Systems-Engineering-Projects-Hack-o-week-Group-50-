@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vending Machine Dispenser - IoT Simulation</title>
+<meta name="description" content="Interactive vending machine dispenser simulation with capacitive proximity sensor, relay control, and EEPROM inventory tracking.">
+<link rel="stylesheet" href="style.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+<header>
+  <div class="header-glow"></div>
+  <h1>🏭 Vending Machine Dispenser</h1>
+  <p class="subtitle">IoT Simulation — Capacitive Proximity Sensor + Relay + EEPROM Inventory</p>
+</header>
+
+<main>
+  <!-- LEFT: Simulation Panel -->
+  <section id="sim-panel" class="panel">
+    <h2>⚡ Live Simulation</h2>
+
+    <div class="vending-machine" id="vendingMachine">
+      <div class="vm-screen">
+        <div class="vm-title">SMART VEND</div>
+        <div class="vm-status" id="vmStatus">READY</div>
+        <div class="vm-msg" id="vmMsg">Place hand near sensor to dispense</div>
+      </div>
+
+      <div class="vm-slots">
+        <div class="slot" id="slot-A"><span class="slot-label">A</span><div class="slot-items" id="itemsA"></div><span class="slot-count" id="countA">5</span></div>
+        <div class="slot" id="slot-B"><span class="slot-label">B</span><div class="slot-items" id="itemsB"></div><span class="slot-count" id="countB">5</span></div>
+        <div class="slot" id="slot-C"><span class="slot-label">C</span><div class="slot-items" id="itemsC"></div><span class="slot-count" id="countC">5</span></div>
+      </div>
+
+      <div class="vm-dispense-area">
+        <div class="dispense-tray" id="dispenseTray">
+          <span class="tray-label">COLLECTION TRAY</span>
+          <div id="dispensedItem"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sensor Area -->
+    <div class="sensor-section">
+      <div class="sensor-wrapper">
+        <div class="sensor-ring" id="sensorRing">
+          <div class="sensor-core" id="sensorCore">
+            <span>📡</span>
+            <small>Proximity Sensor</small>
+          </div>
+        </div>
+        <button class="hand-btn" id="handBtn" title="Place hand near sensor">
+          🤚 Place Hand
+        </button>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <div class="slot-selector">
+        <label>Select Slot:</label>
+        <div class="slot-btns">
+          <button class="slot-sel active" data-slot="A" id="selA">A</button>
+          <button class="slot-sel" data-slot="B" id="selB">B</button>
+          <button class="slot-sel" data-slot="C" id="selC">C</button>
+        </div>
+      </div>
+      <button class="reset-btn" id="resetBtn">🔄 Reset Inventory</button>
+    </div>
+
+    <!-- Status Indicators -->
+    <div class="indicators">
+      <div class="indicator">
+        <div class="led" id="ledSensor"></div>
+        <span>Sensor</span>
+      </div>
+      <div class="indicator">
+        <div class="led" id="ledRelay"></div>
+        <span>Relay</span>
+      </div>
+      <div class="indicator">
+        <div class="led" id="ledMotor"></div>
+        <span>Motor</span>
+      </div>
+      <div class="indicator">
+        <div class="led" id="ledEeprom"></div>
+        <span>EEPROM</span>
+      </div>
+    </div>
+
+    <!-- Serial Monitor -->
+    <div class="serial-monitor">
+      <div class="serial-header">
+        <span>📟 Serial Monitor (9600 baud)</span>
+        <button id="clearSerial" class="clear-btn">Clear</button>
+      </div>
+      <div class="serial-output" id="serialOutput"></div>
+    </div>
+  </section>
+
+  <!-- RIGHT: Circuit & Code Panel -->
+  <section id="info-panel" class="panel">
+    <div class="tab-bar">
+      <button class="tab active" data-tab="circuit" id="tabCircuit">🔌 Circuit Diagram</button>
+      <button class="tab" data-tab="code" id="tabCode">💻 Arduino Code</button>
+    </div>
+
+    <div class="tab-content" id="circuitTab">
+      <h3>Circuit Diagram</h3>
+      <div class="circuit-diagram" id="circuitDiagram">
+        <canvas id="circuitCanvas" width="520" height="580"></canvas>
+      </div>
+      <div class="component-list">
+        <h4>Components Used</h4>
+        <ul>
+          <li><span class="comp-dot blue"></span> Arduino Uno (Microcontroller)</li>
+          <li><span class="comp-dot green"></span> TTP223 Capacitive Touch Sensor</li>
+          <li><span class="comp-dot red"></span> 5V Relay Module</li>
+          <li><span class="comp-dot orange"></span> DC Motor (Dispenser Mechanism)</li>
+          <li><span class="comp-dot purple"></span> 16x2 LCD Display (I2C)</li>
+          <li><span class="comp-dot gray"></span> EEPROM (Internal to Arduino)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="tab-content hidden" id="codeTab">
+      <h3>Arduino Code</h3>
+      <div class="code-actions">
+        <button id="copyCode" class="copy-btn">📋 Copy Code</button>
+      </div>
+      <pre class="code-block"><code id="arduinoCode"></code></pre>
+    </div>
+  </section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
