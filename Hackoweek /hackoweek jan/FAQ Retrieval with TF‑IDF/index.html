@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Institute Help Desk</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 800px;
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px;
+            text-align: center;
+            border-bottom: 3px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.95;
+        }
+
+        .chat-area {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        .chat-area::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-area::-webkit-scrollbar-track {
+            background: #e9ecef;
+        }
+
+        .chat-area::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 4px;
+        }
+
+        .message {
+            margin-bottom: 16px;
+            display: flex;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message.bot {
+            justify-content: flex-start;
+        }
+
+        .message-bubble {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            word-wrap: break-word;
+            line-height: 1.5;
+        }
+
+        .message.user .message-bubble {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.bot .message-bubble {
+            background: white;
+            color: #2d3748;
+            border: 1px solid #e2e8f0;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .input-area {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            gap: 12px;
+        }
+
+        #userInput {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 24px;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        #userInput:focus {
+            border-color: #667eea;
+        }
+
+        #sendBtn {
+            padding: 12px 28px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 24px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        #sendBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        #sendBtn:active {
+            transform: translateY(0);
+        }
+
+        .welcome-message {
+            text-align: center;
+            color: #718096;
+            padding: 40px 20px;
+        }
+
+        .welcome-message h2 {
+            color: #2d3748;
+            margin-bottom: 12px;
+        }
+
+        .similarity-badge {
+            display: inline-block;
+            font-size: 11px;
+            color: #667eea;
+            margin-top: 4px;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Institute Help Desk</h1>
+            <p>Ask me anything about our institute</p>
+        </div>
+
+        <div class="chat-area" id="chatArea">
+            <div class="welcome-message">
+                <h2>Welcome!</h2>
+                <p>I'm here to help you with information about our institute.<br>
+                Feel free to ask about admissions, fees, courses, timings, and more.</p>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <input
+                type="text"
+                id="userInput"
+                placeholder="Type your question here..."
+                onkeypress="handleKeyPress(event)"
+            >
+            <button id="sendBtn" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        // FAQ Database - Educational Institute FAQs
+        const faqDatabase = [
+            {
+                question: "What are the institute timings?",
+                answer: "The institute operates from 9:00 AM to 5:00 PM, Monday through Friday. Saturday sessions run from 9:00 AM to 1:00 PM."
+            },
+            {
+                question: "How can I apply for admission?",
+                answer: "You can apply for admission by visiting our admissions office or through our online portal. You'll need to submit your 12th mark sheet, entrance exam score, ID proof, and fill out the application form. Deadline is typically in May each year."
+            },
+            {
+                question: "What is the fee structure?",
+                answer: "The fee structure varies by program. Undergraduate programs range from ₹2,00,000 to ₹4,00,000 per semester, while postgraduate programs range from ₹3,00,000 to ₹6,00,000 per semester. Scholarships and EMI options are available."
+            },
+            {
+                question: "What courses are offered?",
+                answer: "We offer programs in Computer Science, Engineering, Business Administration, Commerce, Arts, Sciences, and Healthcare. Each department offers both undergraduate and postgraduate degrees including BTech, B.Sc, MBA, and M.Tech."
+            },
+            {
+                question: "Is hostel facility available?",
+                answer: "Yes, we have separate hostel facilities for male and female students with modern amenities including high-speed Wi-Fi, mess facility, laundry service, gym, and 24/7 security. Hostel fee is ₹80,000-₹1,20,000 per semester."
+            },
+            {
+                question: "What are the scholarship opportunities?",
+                answer: "We offer merit-based scholarships (25%-100% tuition coverage), need-based financial aid, and sports scholarships. SC/ST students get additional benefits as per government norms. Applications are reviewed during admission."
+            },
+            {
+                question: "How is the placement record?",
+                answer: "Our placement rate is 94% with average packages ranging from ₹4.5 LPA to ₹18 LPA. Top recruiters include Infosys, TCS, Wipro, Accenture, Amazon, Goldman Sachs, and leading consulting firms."
+            },
+            {
+                question: "What is the library timing?",
+                answer: "The central library is open from 8:00 AM to 10:00 PM on weekdays and 9:00 AM to 6:00 PM on weekends. It houses over 2,00,000 books and digital resources including e-journals and online databases."
+            },
+            {
+                question: "Are there any extracurricular activities?",
+                answer: "Yes, we have over 60 student clubs including technical, cultural, sports, and social service clubs. Annual events include TechFest, cultural festivals, sports tournaments, and entrepreneurship competitions."
+            },
+            {
+                question: "What is the eligibility criteria for admission?",
+                answer: "For BTech, you need 12th pass with Physics, Chemistry, and Maths with minimum 60% marks. For graduation programs, you need relevant bachelor's degree with 55% marks. JEE Main/Advanced scores required for BTech."
+            },
+            {
+                question: "Is there an entrance exam?",
+                answer: "Yes, admission to BTech requires JEE Main score. For MBA, you need CAT/MAT/XAT score. For M.Tech, GATE score is required. Dates and registration details are available on our website."
+            },
+            {
+                question: "What facilities are available on campus?",
+                answer: "Our campus features modern classrooms, AI/ML labs, robotics lab, 500+ computers lab, sports complex with badminton/volleyball courts, swimming pool, cafeteria, medical center, auditorium, and recreational areas."
+            },
+            {
+                question: "Can I get a campus tour?",
+                answer: "Absolutely! Campus tours are available Monday through Friday at 10:00 AM and 2:00 PM. Please register at the admissions office or book online on our website."
+            },
+            {
+                question: "What is the student-teacher ratio?",
+                answer: "We maintain a healthy student-teacher ratio of 12:1, ensuring personalized attention and quality interaction between faculty and students during lab sessions and tutorials."
+            },
+            {
+                question: "How do I contact the administration?",
+                answer: "You can reach us via phone at 011-4567-8900, email at admissions@institute.edu, or visit the admissions office during business hours. We respond to emails within 24 hours."
+            },
+            {
+                question: "What about internship opportunities?",
+                answer: "We have partnerships with over 200 companies providing internship opportunities. Most students complete 2-3 internships during their course. Internship allowance ranges from ₹15,000 to ₹50,000 per month."
+            },
+            {
+                question: "Is there a mess facility in the hostel?",
+                answer: "Yes, we have a well-maintained mess facility serving vegetarian, non-vegetarian, and diet-specific meals. Monthly mess fee is approximately ₹4,500-₹5,500. Mess menu is planned by dietitians."
+            },
+            {
+                question: "Can day scholars get meal plans?",
+                answer: "Yes, day scholars can opt for meal plans at our cafeteria. Monthly passes cost ₹2,500 (15 meals) or ₹4,500 (30 meals). We also have a à la carte menu with prices starting from ₹50."
+            },
+            {
+                question: "What are the cut-off marks for admission?",
+                answer: "JEE cut-offs vary yearly based on difficulty and number of applicants. Last year's cut-offs ranged from 92-98 percentile for BTech. For postgraduates, GATE cut-offs are around 60-70. Contact admissions for exact current cut-offs."
+            },
+            {
+                question: "What is the course duration?",
+                answer: "BTech programs are 4 years (8 semesters), B.Sc is 3 years (6 semesters), MBA is 2 years (4 semesters), and M.Tech is 2 years (4 semesters). Summer internships are conducted between semesters."
+            },
+            {
+                question: "Are there exchange programs available?",
+                answer: "Yes, we have partnerships with universities in USA, UK, Germany, and Canada for student exchange programs. Students can spend a semester abroad during their 3rd or 4th year. Financial support is available."
+            },
+            {
+                question: "What about scholarships for girls?",
+                answer: "We offer dedicated scholarships for girl students covering 50%-100% of fees. Additional incentives include hostel fee waivers and mentorship programs. Applications are open year-round."
+            },
+            {
+                question: "How are exams conducted and what is the evaluation pattern?",
+                answer: "Continuous evaluation includes assignments (20%), internal exams (30%), and end semester exam (50%). Exams are conducted every 6 months. Grading is on CGPA scale of 10. Results are published within 10 days."
+            },
+            {
+                question: "What is the hostel allocation process?",
+                answer: "Hostel allocation is based on merit, availability, and preference. Allotment usually happens in August. You can choose preference online. Single, double, and triple sharing rooms are available."
+            },
+            {
+                question: "Can I change my course after admission?",
+                answer: "Course change is allowed only during the first semester based on availability and CGPA cutoffs. There's no additional fee for change. Request must be submitted to the academic office within 2 weeks of admission."
+            }
+        ];
+
+        // English stopwords for removal
+        const stopwords = new Set([
+            'a', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'for', 'from',
+            'has', 'he', 'in', 'is', 'it', 'its', 'of', 'on', 'that', 'the',
+            'to', 'was', 'will', 'with', 'i', 'my', 'me', 'we', 'you', 'what',
+            'when', 'where', 'who', 'how', 'can', 'do', 'does', 'am', 'your',
+            'there', 'their', 'this', 'these', 'those'
+        ]);
+
+        // Text normalization rules (plural to singular, etc.)
+        const normalizationRules = {
+            'fees': 'fee',
+            'timings': 'timing',
+            'courses': 'course',
+            'facilities': 'facility',
+            'activities': 'activity',
+            'opportunities': 'opportunity',
+            'scholarships': 'scholarship',
+            'exams': 'exam',
+            'students': 'student',
+            'teachers': 'teacher',
+            'programs': 'program',
+            'classes': 'class',
+            'books': 'book'
+        };
+
+        /**
+         * TEXT PREPROCESSING PIPELINE
+         * Converts text to normalized tokens
+         */
+        function preprocessText(text) {
+            // Step 1: Convert to lowercase
+            text = text.toLowerCase();
+
+            // Step 2: Remove punctuation (keep only alphanumeric and spaces)
+            text = text.replace(/[^\w\s]/g, ' ');
+
+            // Step 3: Tokenize into words
+            let tokens = text.split(/\s+/).filter(token => token.length > 0);
+
+            // Step 4: Remove stopwords
+            tokens = tokens.filter(token => !stopwords.has(token));
+
+            // Step 5: Apply normalization (plural to singular, etc.)
+            tokens = tokens.map(token => normalizationRules[token] || token);
+
+            return tokens;
+        }
+
+        /**
+         * Create vocabulary from all documents
+         * Returns a Set of unique terms
+         */
+        function createVocabulary(documents) {
+            const vocab = new Set();
+            documents.forEach(doc => {
+                const tokens = preprocessText(doc);
+                tokens.forEach(token => vocab.add(token));
+            });
+            return vocab;
+        }
+
+        /**
+         * Calculate Term Frequency (TF)
+         * TF(t, d) = (Number of times term t appears in document d) / (Total number of terms in document d)
+         */
+        function calculateTF(tokens) {
+            const tf = {};
+            const totalTokens = tokens.length;
+
+            tokens.forEach(token => {
+                tf[token] = (tf[token] || 0) + 1;
+            });
+
+            // Normalize by total tokens
+            for (let token in tf) {
+                tf[token] = tf[token] / totalTokens;
+            }
+
+            return tf;
+        }
+
+        /**
+         * Calculate Inverse Document Frequency (IDF)
+         * IDF(t, D) = log(Total number of documents / Number of documents containing term t)
+         */
+        function calculateIDF(documents) {
+            const idf = {};
+            const totalDocs = documents.length;
+            const vocabulary = createVocabulary(documents);
+
+            vocabulary.forEach(term => {
+                let docCount = 0;
+
+                documents.forEach(doc => {
+                    const tokens = preprocessText(doc);
+                    if (tokens.includes(term)) {
+                        docCount++;
+                    }
+                });
+
+                // Add 1 to avoid division by zero
+                idf[term] = Math.log(totalDocs / (docCount + 1));
+            });
+
+            return idf;
+        }
+
+        /**
+         * Generate TF-IDF vector for a document
+         * TF-IDF(t, d, D) = TF(t, d) × IDF(t, D)
+         */
+        function generateTFIDFVector(tokens, idf, vocabulary) {
+            const tf = calculateTF(tokens);
+            const tfidfVector = {};
+
+            vocabulary.forEach(term => {
+                if (tf[term]) {
+                    tfidfVector[term] = tf[term] * (idf[term] || 0);
+                } else {
+                    tfidfVector[term] = 0;
+                }
+            });
+
+            return tfidfVector;
+        }
+
+        /**
+         * Calculate Cosine Similarity between two vectors
+         * cosine_similarity(A, B) = (A · B) / (||A|| × ||B||)
+         */
+        function cosineSimilarity(vec1, vec2) {
+            let dotProduct = 0;
+            let magnitude1 = 0;
+            let magnitude2 = 0;
+
+            // Get all unique keys from both vectors
+            const allKeys = new Set([...Object.keys(vec1), ...Object.keys(vec2)]);
+
+            allKeys.forEach(key => {
+                const val1 = vec1[key] || 0;
+                const val2 = vec2[key] || 0;
+
+                dotProduct += val1 * val2;
+                magnitude1 += val1 * val1;
+                magnitude2 += val2 * val2;
+            });
+
+            magnitude1 = Math.sqrt(magnitude1);
+            magnitude2 = Math.sqrt(magnitude2);
+
+            if (magnitude1 === 0 || magnitude2 === 0) {
+                return 0;
+            }
+
+            return dotProduct / (magnitude1 * magnitude2);
+        }
+
+        /**
+         * MAIN CHATBOT LOGIC
+         * Find most similar FAQ using TF-IDF and cosine similarity
+         */
+        function findAnswer(userQuery) {
+            const SIMILARITY_THRESHOLD = 0.2;
+
+            // Preprocess user query
+            const queryTokens = preprocessText(userQuery);
+
+            // Get all FAQ questions
+            const allQuestions = faqDatabase.map(faq => faq.question);
+
+            // Create vocabulary from all questions + user query
+            const vocabulary = createVocabulary([...allQuestions, userQuery]);
+
+            // Calculate IDF for the entire corpus
+            const idf = calculateIDF([...allQuestions, userQuery]);
+
+            // Generate TF-IDF vector for user query
+            const queryVector = generateTFIDFVector(queryTokens, idf, vocabulary);
+
+            // Calculate similarity with each FAQ question
+            let maxSimilarity = 0;
+            let bestMatch = null;
+
+            faqDatabase.forEach(faq => {
+                const faqTokens = preprocessText(faq.question);
+                const faqVector = generateTFIDFVector(faqTokens, idf, vocabulary);
+
+                const similarity = cosineSimilarity(queryVector, faqVector);
+
+                if (similarity > maxSimilarity) {
+                    maxSimilarity = similarity;
+                    bestMatch = faq;
+                }
+            });
+
+            // Check if similarity meets threshold
+            if (maxSimilarity < SIMILARITY_THRESHOLD) {
+                return {
+                    answer: "Sorry, I couldn't find a relevant answer to your question. Please try rephrasing or contact our administration at info@institute.edu for more help.",
+                    similarity: maxSimilarity
+                };
+            }
+
+            return {
+                answer: bestMatch.answer,
+                similarity: maxSimilarity
+            };
+        }
+
+        /**
+         * UI FUNCTIONS
+         */
+        function addMessage(text, type) {
+            const chatArea = document.getElementById('chatArea');
+
+            // Remove welcome message if exists
+            const welcomeMsg = chatArea.querySelector('.welcome-message');
+            if (welcomeMsg) {
+                welcomeMsg.remove();
+            }
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.className = 'message-bubble';
+            bubbleDiv.textContent = text;
+
+            messageDiv.appendChild(bubbleDiv);
+            chatArea.appendChild(messageDiv);
+
+            // Auto-scroll to bottom
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('userInput');
+            const userQuery = input.value.trim();
+
+            if (!userQuery) return;
+
+            // Display user message
+            addMessage(userQuery, 'user');
+
+            // Clear input
+            input.value = '';
+
+            // Get bot response using TF-IDF
+            const result = findAnswer(userQuery);
+
+            // Display bot response after a short delay (natural feel)
+            setTimeout(() => {
+                addMessage(result.answer, 'bot');
+            }, 300);
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // Focus on input when page loads
+        window.onload = function() {
+            document.getElementById('userInput').focus();
+        };
+    </script>
+</body>
+</html>
