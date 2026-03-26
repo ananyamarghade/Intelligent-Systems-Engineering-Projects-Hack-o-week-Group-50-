@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Fallback & Handover Bot – Project 8</title>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;500;700;900&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #f5f2ee;
+    --paper: #fdfaf6;
+    --ink: #1c1810;
+    --ink2: #3d3828;
+    --muted: #9a9080;
+    --rule: #e0d8cc;
+    --stamp-red: #c0392b;
+    --stamp-blue: #1a5276;
+    --stamp-green: #1e8449;
+    --stamp-orange: #d35400;
+    --accent: #2c3e8c;
+    --tag-bg: #eef2ff;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Epilogue', sans-serif;
+    min-height: 100vh;
+    /* subtle paper texture via repeating lines */
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(180,165,140,0.08) 28px),
+      radial-gradient(ellipse at 60% 0%, rgba(44,62,140,0.04) 0%, transparent 60%);
+  }
+
+  /* ── PAGE LAYOUT ── */
+  .page {
+    max-width: 960px; margin: 0 auto;
+    padding: 40px 24px 60px;
+    display: grid;
+    grid-template-rows: auto auto 1fr;
+    gap: 0;
+  }
+
+  /* ── LETTERHEAD ── */
+  .letterhead {
+    border-bottom: 3px double var(--ink2);
+    padding-bottom: 18px; margin-bottom: 28px;
+    display: flex; align-items: flex-start; justify-content: space-between;
+    animation: fadeIn 0.5s ease both;
+  }
+  .lh-left {}
+  .institute-name {
+    font-size: clamp(1.1rem,2.5vw,1.5rem);
+    font-weight: 900; letter-spacing: -0.5px; color: var(--ink);
+    text-transform: uppercase;
+  }
+  .institute-sub {
+    font-family: 'Inconsolata', monospace;
+    font-size: 11px; color: var(--muted); letter-spacing: 1px; margin-top: 2px;
+  }
+  .lh-right {
+    text-align: right;
+    font-family: 'Inconsolata', monospace; font-size: 11px; color: var(--muted);
+    line-height: 1.7;
+  }
+  .project-tag {
+    display: inline-block; background: var(--ink);
+    color: #fff; font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+    padding: 3px 10px; border-radius: 2px; margin-bottom: 6px;
+  }
+
+  /* ── MAIN CONTENT AREA ── */
+  .content-grid {
+    display: grid;
+    grid-template-columns: 1fr 290px;
+    gap: 28px;
+    animation: fadeIn 0.5s 0.1s ease both;
+  }
+  @media(max-width:680px){ .content-grid{ grid-template-columns:1fr; } }
+
+  /* ── CHAT COLUMN ── */
+  .chat-col {}
+
+  .section-rule {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 14px;
+  }
+  .section-rule span {
+    font-size: 10px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--muted); white-space: nowrap;
+  }
+  .section-rule::after {
+    content:''; flex:1; height:1px; background: var(--rule);
+  }
+
+  #chat-box {
+    min-height: 380px; max-height: 430px;
+    overflow-y: auto; padding: 4px 0;
+    display: flex; flex-direction: column; gap: 18px;
+    scroll-behavior: smooth;
+  }
+  #chat-box::-webkit-scrollbar{ width:3px; }
+  #chat-box::-webkit-scrollbar-thumb{ background:var(--rule); }
+
+  /* ── MESSAGE STYLES (document / memo style) ── */
+  .message { animation: slideUp 0.25s ease both; }
+
+  .msg-user {
+    display: flex; justify-content: flex-end;
+  }
+  .msg-user .bubble {
+    background: var(--accent); color: #fff;
+    padding: 10px 16px; border-radius: 2px 14px 14px 14px;
+    font-size: 13.5px; line-height: 1.6; max-width: 78%;
+    box-shadow: 2px 3px 8px rgba(44,62,140,0.15);
+  }
+
+  .msg-bot { display: flex; gap: 10px; align-items: flex-start; }
+  .bot-icon {
+    width: 32px; height: 32px; flex-shrink: 0; margin-top: 2px;
+    background: var(--ink); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; border-radius: 4px;
+  }
+  .bot-body { flex: 1; }
+  .bot-bubble {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--ink2);
+    padding: 12px 16px;
+    font-size: 13.5px; line-height: 1.7;
+    white-space: pre-wrap; word-break: break-word;
+    box-shadow: 1px 2px 6px rgba(0,0,0,0.05);
+  }
+  /* fallback type border colours */
+  .bot-bubble.clarify  { border-left-color: var(--stamp-orange); }
+  .bot-bubble.suggest  { border-left-color: var(--stamp-blue); }
+  .bot-bubble.handover { border-left-color: var(--stamp-red); }
+  .bot-bubble.answered { border-left-color: var(--stamp-green); }
+
+  /* STAMP overlay on bot messages */
+  .stamp {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-family: 'Inconsolata', monospace;
+    font-size: 9.5px; font-weight: 500; letter-spacing: 1.5px;
+    text-transform: uppercase; padding: 3px 9px;
+    border: 1.5px solid; border-radius: 2px;
+    margin-bottom: 8px;
+  }
+  .stamp.clarify  { color: var(--stamp-orange); border-color: var(--stamp-orange); background: rgba(211,84,0,0.06); }
+  .stamp.suggest  { color: var(--stamp-blue);   border-color: var(--stamp-blue);   background: rgba(26,82,118,0.06); }
+  .stamp.handover { color: var(--stamp-red);    border-color: var(--stamp-red);    background: rgba(192,57,43,0.06); }
+  .stamp.answered { color: var(--stamp-green);  border-color: var(--stamp-green);  background: rgba(30,132,73,0.06); }
+
+  /* Quick-reply chips after clarify/suggest messages */
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .chip {
+    font-size: 12px; padding: 5px 12px;
+    border: 1px solid var(--accent); color: var(--accent);
+    background: var(--tag-bg); border-radius: 100px; cursor: pointer;
+    transition: all 0.15s; font-weight: 500;
+  }
+  .chip:hover { background: var(--accent); color: #fff; }
+
+  /* Handover card */
+  .handover-card {
+    margin-top: 12px;
+    border: 1px solid var(--rule); border-radius: 4px; overflow: hidden;
+  }
+  .hc-header {
+    background: var(--stamp-red); color: #fff;
+    padding: 7px 14px; font-size: 11px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+  }
+  .hc-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+  .hc-row { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+  .hc-icon { font-size: 16px; }
+  .hc-link { color: var(--stamp-blue); text-decoration: none; font-weight: 500; }
+  .hc-link:hover { text-decoration: underline; }
+
+  /* Input */
+  .input-area { margin-top: 16px; }
+  .input-wrap {
+    display: flex; gap: 0;
+    border: 1.5px solid var(--ink2); border-radius: 3px; overflow: hidden;
+    background: var(--paper); box-shadow: 2px 3px 10px rgba(0,0,0,0.07);
+  }
+  .input-wrap:focus-within { border-color: var(--accent); }
+  #user-input {
+    flex:1; background:transparent; border:none; outline:none;
+    padding: 11px 16px;
+    font-family: 'Epilogue', sans-serif; font-size: 13.5px; color: var(--ink);
+  }
+  #user-input::placeholder { color: var(--muted); }
+  #send-btn {
+    background: var(--ink); color: #fff; border: none;
+    padding: 0 22px; cursor: pointer;
+    font-family: 'Epilogue', sans-serif; font-weight: 700; font-size: 12px;
+    letter-spacing: 1px; text-transform: uppercase;
+    transition: background 0.2s;
+  }
+  #send-btn:hover { background: var(--accent); }
+
+  /* ── RIGHT COLUMN ── */
+  .right-col { display: flex; flex-direction: column; gap: 20px; }
+
+  /* Fallback legend */
+  .legend-card {
+    background: var(--paper); border: 1px solid var(--rule);
+    padding: 16px;
+  }
+  .legend-title {
+    font-size: 10px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 12px;
+    padding-bottom: 8px; border-bottom: 1px solid var(--rule);
+  }
+  .legend-row {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 9px 0; border-bottom: 1px dotted var(--rule);
+  }
+  .legend-row:last-child { border-bottom: none; }
+  .l-dot { width: 10px; height: 10px; border-radius: 1px; flex-shrink:0; margin-top:3px; }
+  .l-info { display:flex; flex-direction:column; gap:2px; }
+  .l-name { font-size: 12px; font-weight: 700; }
+  .l-desc { font-size: 11px; color: var(--muted); line-height: 1.4; }
+
+  /* Escalation log */
+  .log-card {
+    background: var(--paper); border: 1px solid var(--rule);
+    flex: 1;
+  }
+  .log-header {
+    padding: 10px 14px; border-bottom: 1px solid var(--rule);
+    font-size: 10px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--muted);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  #log-count {
+    background: var(--stamp-red); color: #fff;
+    font-size: 10px; padding: 1px 7px; border-radius: 100px;
+  }
+  #log-list { padding: 10px 12px; display:flex; flex-direction:column; gap:6px; min-height:80px; }
+  .log-entry {
+    font-size: 11px; font-family: 'Inconsolata', monospace;
+    padding: 6px 8px; border-left: 2px solid var(--rule);
+    color: var(--ink2); line-height: 1.4; animation: slideUp 0.2s ease both;
+  }
+  .log-entry.handover { border-left-color: var(--stamp-red); }
+  .log-entry.clarify  { border-left-color: var(--stamp-orange); }
+  .log-entry.suggest  { border-left-color: var(--stamp-blue); }
+  .log-empty { font-size: 11px; color: var(--muted); font-family:'Inconsolata',monospace; padding: 8px; }
+
+  /* Try these */
+  .try-card { background: var(--paper); border: 1px solid var(--rule); }
+  .try-list { padding: 10px; display:flex; flex-direction:column; gap:5px; }
+  .try-item {
+    font-size: 12px; padding: 7px 10px;
+    border: 1px dashed var(--rule); cursor: pointer; color: var(--ink2);
+    transition: all 0.15s; line-height: 1.4;
+  }
+  .try-item:hover { border-color: var(--accent); color: var(--accent); background: var(--tag-bg); }
+  .try-cat { font-size: 9px; letter-spacing: 1px; text-transform:uppercase; color:var(--muted); display:block; margin-bottom:1px; }
+
+  @keyframes fadeIn  { from{opacity:0;} to{opacity:1;} }
+  @keyframes slideUp { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);} }
+
+  .typing-row { display:flex; gap:10px; align-items:center; animation:slideUp 0.2s ease both; }
+  .typing-dots { display:flex; gap:4px; padding:12px 16px; background:var(--paper); border:1px solid var(--rule); border-left:3px solid var(--ink2); }
+  .d{width:6px;height:6px;background:var(--muted);border-radius:50%;animation:b 1.2s infinite;}
+  .d:nth-child(2){animation-delay:0.2s;} .d:nth-child(3){animation-delay:0.4s;}
+  @keyframes b{0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-5px);}}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- LETTERHEAD -->
+  <div class="letterhead">
+    <div class="lh-left">
+      <div class="project-tag">Project 8</div>
+      <div class="institute-name">Institute Help Desk</div>
+      <div class="institute-sub">// Fallback Strategy & Human Handover System</div>
+    </div>
+    <div class="lh-right">
+      <div>Fallback · Clarification · Suggestions</div>
+      <div>Escalation · Human Handover</div>
+      <div style="margin-top:4px;color:var(--ink);font-weight:700">LIVE SESSION</div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content-grid">
+
+    <!-- CHAT COLUMN -->
+    <div class="chat-col">
+      <div class="section-rule"><span>Conversation</span></div>
+      <div id="chat-box"></div>
+      <div class="input-area">
+        <div class="input-wrap">
+          <input id="user-input" type="text" placeholder="Type your query here…" autocomplete="off"/>
+          <button id="send-btn" onclick="handleSend()">Send →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="right-col">
+
+      <!-- Fallback legend -->
+      <div class="legend-card">
+        <div class="legend-title">Fallback Strategy Key</div>
+        <div class="legend-row">
+          <div class="l-dot" style="background:var(--stamp-green)"></div>
+          <div class="l-info">
+            <div class="l-name" style="color:var(--stamp-green)">Answered</div>
+            <div class="l-desc">Query matched — direct answer given</div>
+          </div>
+        </div>
+        <div class="legend-row">
+          <div class="l-dot" style="background:var(--stamp-orange)"></div>
+          <div class="l-info">
+            <div class="l-name" style="color:var(--stamp-orange)">Clarify</div>
+            <div class="l-desc">Query too vague — bot asks a follow-up</div>
+          </div>
+        </div>
+        <div class="legend-row">
+          <div class="l-dot" style="background:var(--stamp-blue)"></div>
+          <div class="l-info">
+            <div class="l-name" style="color:var(--stamp-blue)">Suggest</div>
+            <div class="l-desc">No match — related topics offered</div>
+          </div>
+        </div>
+        <div class="legend-row">
+          <div class="l-dot" style="background:var(--stamp-red)"></div>
+          <div class="l-info">
+            <div class="l-name" style="color:var(--stamp-red)">Handover</div>
+            <div class="l-desc">Out-of-scope — routed to human advisor</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Escalation log -->
+      <div class="log-card">
+        <div class="log-header">
+          Escalation Log
+          <span id="log-count">0</span>
+        </div>
+        <div id="log-list">
+          <div class="log-empty">// no escalations yet</div>
+        </div>
+      </div>
+
+      <!-- Try these -->
+      <div class="try-card">
+        <div class="log-header" style="border-bottom:1px solid var(--rule)">Try These Queries</div>
+        <div class="try-list" id="try-list"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// KNOWLEDGE BASE
+// ═══════════════════════════════════════════════
+const KB = [
+  { patterns:[/fee|tuition|cost|payment/i],  topic:'fees',
+    answer:"Annual tuition fee is ₹85,000, covering all academic charges.\nHostel (₹5,000/mo) and transport (₹1,200/mo) are billed separately.\n\nFor installment plans, contact the accounts office." },
+  { patterns:[/exam|test|assessment/i],       topic:'exams',
+    answer:"Semester exams are held in November and April.\nSchedules are posted on the student portal 3 weeks prior.\nHall tickets are available online 1 week before exams." },
+  { patterns:[/timetable|class.*schedule|lecture/i], topic:'timetable',
+    answer:"Class timetables are available on the student portal under 'My Schedule'.\nThey are updated at the start of each semester by the academic section." },
+  { patterns:[/hostel|accommodation|dorm/i],  topic:'hostel',
+    answer:"On-campus hostels available for boys and girls separately.\nMonthly fee: ₹5,000 (meals included).\nApply at: hostel@institute.edu" },
+  { patterns:[/admission|apply|enroll|join/i],topic:'admissions',
+    answer:"Admissions open every June. Apply online at institute.edu/admissions.\nLast date: July 31. JEE / CET scores required." },
+  { patterns:[/scholarship|financial aid|merit/i], topic:'scholarships',
+    answer:"Merit and need-based scholarships available.\nApplications open in August — visit Room 203 or email scholarship@institute.edu." },
+  { patterns:[/placement|job|recruit|career/i],topic:'placements',
+    answer:"120+ companies recruit on campus. Average package: ₹6.2 LPA.\nContact: placement@institute.edu" },
+  { patterns:[/library|book|borrow/i],         topic:'library',
+    answer:"Library hours: Mon–Fri 8AM–8PM, Sat 9AM–5PM.\nStudents can borrow up to 4 books for 14 days." },
+  { patterns:[/contact|phone|email|address/i], topic:'contact',
+    answer:"📞 +91-712-2345678\n📧 info@institute.edu\n🏢 Room 101, Admin Block" },
+  { patterns:[/holiday|vacation|break/i],      topic:'holidays',
+    answer:"Winter break: Dec 25 – Jan 2\nSummer break: May 15 – Jun 15\nFull academic calendar on the student portal." },
+];
+
+// Vague / ambiguous triggers → ask clarification
+const VAGUE = [
+  { pattern:/^(hi|hello|hey|yo|sup)\b/i,
+    question:"Hi there! 👋 What can I help you with today?",
+    chips:["Fees","Exam schedule","Hostel","Admissions","Timetable"] },
+  { pattern:/\b(info|information|details|tell me|help)\b/i,
+    question:"Sure! Which topic would you like information on?",
+    chips:["Fees","Exams","Hostel","Scholarships","Placements","Library"] },
+  { pattern:/\bschedule\b/i,
+    question:"When you say 'schedule', do you mean exam schedule or class timetable?",
+    chips:["Exam schedule","Class timetable"] },
+  { pattern:/\bwhen\b/i,
+    question:"Could you be more specific? When are you asking about?",
+    chips:["Exam dates","Admission deadline","Office hours","Holiday dates"] },
+];
+
+// Out-of-scope → handover
+const OOS_PATTERNS = [
+  /complaint|grievance|harassment|bully/i,
+  /mental health|counsell?or|therapist|stress/i,
+  /medical|doctor|clinic|sick|health/i,
+  /legal|lawsuit|court|police|fir/i,
+  /emergency|urgent|critical|accident/i,
+  /visa|passport|immigration/i,
+  /salary|payroll|staff|faculty.*pay/i,
+  /refund|chargeback|fraud/i,
+];
+
+const HANDOVER_ROUTES = {
+  complaint:   { label:"Student Grievance Cell", email:"grievance@institute.edu", desk:"Room 105, Admin Block", ph:"+91-712-2345690" },
+  medical:     { label:"Campus Medical Centre",  email:"health@institute.edu",    desk:"Ground Floor, Health Block", ph:"+91-712-2345699" },
+  counsellor:  { label:"Student Counselling",    email:"counsel@institute.edu",   desk:"Room 210, Student Services", ph:"+91-712-2345695" },
+  legal:       { label:"Institute Legal Cell",   email:"legal@institute.edu",     desk:"Room 102, Admin Block", ph:"+91-712-2345688" },
+  emergency:   { label:"Security Control Room",  email:"security@institute.edu",  desk:"Gate 1, Main Entrance", ph:"+91-712-9999999" },
+  default:     { label:"Admin Help Desk",        email:"helpdesk@institute.edu",  desk:"Room 101, Admin Block", ph:"+91-712-2345678" },
+};
+
+function getHandoverRoute(text) {
+  if (/complaint|grievance|harassment|bully/i.test(text)) return HANDOVER_ROUTES.complaint;
+  if (/medical|doctor|clinic|sick|health/i.test(text))    return HANDOVER_ROUTES.medical;
+  if (/mental|counsel|therapist|stress/i.test(text))      return HANDOVER_ROUTES.counsellor;
+  if (/legal|lawsuit|court/i.test(text))                  return HANDOVER_ROUTES.legal;
+  if (/emergency|urgent|accident/i.test(text))            return HANDOVER_ROUTES.emergency;
+  return HANDOVER_ROUTES.default;
+}
+
+// ═══════════════════════════════════════════════
+// DECISION ENGINE
+// ═══════════════════════════════════════════════
+let consecutiveFails = 0;
+
+function decide(text) {
+  // 1. Check out-of-scope → HANDOVER
+  for (const p of OOS_PATTERNS) {
+    if (p.test(text)) {
+      consecutiveFails = 0;
+      return { type:'handover', route: getHandoverRoute(text) };
+    }
+  }
+
+  // 2. Check KB → ANSWERED
+  for (const item of KB) {
+    for (const p of item.patterns) {
+      if (p.test(text)) {
+        consecutiveFails = 0;
+        return { type:'answered', answer: item.answer, topic: item.topic };
+      }
+    }
+  }
+
+  // 3. Check vague → CLARIFY
+  for (const v of VAGUE) {
+    if (v.pattern.test(text)) {
+      consecutiveFails++;
+      return { type:'clarify', question: v.question, chips: v.chips };
+    }
+  }
+
+  // 4. No match at all
+  consecutiveFails++;
+
+  // After 2 consecutive fails → suggest + offer handover
+  if (consecutiveFails >= 2) {
+    consecutiveFails = 0;
+    return {
+      type:'suggest+handover',
+      message:"I've had trouble understanding your last couple of messages. Here are things I can help with — or I can connect you to a human advisor:",
+      suggestions:["Fees & payments","Exam schedule","Hostel","Admissions","Timetable","Scholarships","Placements"],
+    };
+  }
+
+  // First fail → suggest
+  const words = text.toLowerCase().split(/\s+/);
+  const nearby = KB.filter(k => k.topic && words.some(w => k.topic.includes(w) || w.includes(k.topic.replace('s','')))).map(k=>k.topic);
+  return {
+    type:'suggest',
+    message:"I'm not sure about that. Did you mean any of these?",
+    chips: nearby.length ? nearby.map(n=>n[0].toUpperCase()+n.slice(1)) : ["Fees","Exams","Hostel","Timetable","Admissions","Placements"],
+  };
+}
+
+// ═══════════════════════════════════════════════
+// ESCALATION LOG
+// ═══════════════════════════════════════════════
+let logCount = 0;
+function addLog(type, text) {
+  logCount++;
+  document.getElementById('log-count').textContent = logCount;
+  const list = document.getElementById('log-list');
+  const empty = list.querySelector('.log-empty');
+  if (empty) empty.remove();
+  const t = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  const e = document.createElement('div');
+  e.className = `log-entry ${type}`;
+  e.style.animationDelay = '0s';
+  e.innerHTML = `<span style="color:var(--muted)">${t}</span> [${type.toUpperCase()}] ${text.slice(0,40)}${text.length>40?'…':''}`;
+  list.appendChild(e);
+}
+
+// ═══════════════════════════════════════════════
+// UI
+// ═══════════════════════════════════════════════
+const chatBox = document.getElementById('chat-box');
+const inputEl = document.getElementById('user-input');
+
+function esc(t){ return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function now(){ return new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); }
+
+function appendUser(text) {
+  const w = document.createElement('div');
+  w.className = 'message msg-user';
+  w.innerHTML = `<div class="bubble">${esc(text)}</div>`;
+  chatBox.appendChild(w); chatBox.scrollTop=chatBox.scrollHeight;
+}
+
+function appendBot(decision, rawText) {
+  const w = document.createElement('div');
+  w.className = 'message msg-bot';
+
+  const STAMP_LABELS = {
+    answered:'✓ Answered', clarify:'? Clarification Needed',
+    suggest:'→ Suggestion', handover:'⚑ Routed to Human',
+    'suggest+handover':'⚑ Escalated'
+  };
+  const type = decision.type.replace('+handover','').replace(/\+.*/,'');
+  const realType = decision.type === 'suggest+handover' ? 'handover' : decision.type;
+
+  let bodyHTML = '';
+
+  if (decision.type === 'answered') {
+    bodyHTML = `<div class="bot-bubble answered">
+      <div class="stamp answered">${STAMP_LABELS.answered}</div>
+      ${esc(decision.answer).replace(/\n/g,'<br>')}
+    </div>`;
+  }
+  else if (decision.type === 'clarify') {
+    const chips = decision.chips.map(c=>`<button class="chip" onclick="quickSend('${c}')">${c}</button>`).join('');
+    bodyHTML = `<div class="bot-bubble clarify">
+      <div class="stamp clarify">${STAMP_LABELS.clarify}</div>
+      ${esc(decision.question)}
+      <div class="chips">${chips}</div>
+    </div>`;
+  }
+  else if (decision.type === 'suggest') {
+    const chips = decision.chips.map(c=>`<button class="chip" onclick="quickSend('${c}')">${c}</button>`).join('');
+    bodyHTML = `<div class="bot-bubble suggest">
+      <div class="stamp suggest">${STAMP_LABELS.suggest}</div>
+      ${esc(decision.message)}
+      <div class="chips">${chips}</div>
+    </div>`;
+  }
+  else if (decision.type === 'handover') {
+    const r = decision.route;
+    bodyHTML = `<div class="bot-bubble handover">
+      <div class="stamp handover">${STAMP_LABELS.handover}</div>
+      This query is outside my scope. I'm routing you to a human advisor who can help.
+      <div class="handover-card">
+        <div class="hc-header">📋 ${r.label}</div>
+        <div class="hc-body">
+          <div class="hc-row"><span class="hc-icon">📧</span><a class="hc-link" href="mailto:${r.email}">${r.email}</a></div>
+          <div class="hc-row"><span class="hc-icon">🏢</span>${r.desk}</div>
+          <div class="hc-row"><span class="hc-icon">📞</span>${r.ph}</div>
+        </div>
+      </div>
+    </div>`;
+  }
+  else if (decision.type === 'suggest+handover') {
+    const sug = decision.suggestions.map(c=>`<button class="chip" onclick="quickSend('${c}')">${c}</button>`).join('');
+    const r = HANDOVER_ROUTES.default;
+    bodyHTML = `<div class="bot-bubble handover">
+      <div class="stamp handover">${STAMP_LABELS['suggest+handover']}</div>
+      ${esc(decision.message)}
+      <div class="chips">${sug}</div>
+      <div class="handover-card" style="margin-top:12px">
+        <div class="hc-header">📋 ${r.label}</div>
+        <div class="hc-body">
+          <div class="hc-row"><span class="hc-icon">📧</span><a class="hc-link" href="mailto:${r.email}">${r.email}</a></div>
+          <div class="hc-row"><span class="hc-icon">🏢</span>${r.desk}</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  w.innerHTML = `<div class="bot-icon">🤖</div><div class="bot-body">${bodyHTML}<div style="font-size:10px;color:var(--muted);margin-top:4px;font-family:'Inconsolata',monospace">${now()}</div></div>`;
+  chatBox.appendChild(w); chatBox.scrollTop=chatBox.scrollHeight;
+
+  // Log non-answered
+  if (decision.type !== 'answered') addLog(realType, rawText);
+}
+
+function showTyping() {
+  const w=document.createElement('div'); w.id='typ'; w.className='typing-row';
+  w.innerHTML=`<div class="bot-icon" style="width:32px;height:32px;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;border-radius:4px;flex-shrink:0">🤖</div><div class="typing-dots"><div class="d"></div><div class="d"></div><div class="d"></div></div>`;
+  chatBox.appendChild(w); chatBox.scrollTop=chatBox.scrollHeight;
+}
+function removeTyping(){ const e=document.getElementById('typ'); if(e)e.remove(); }
+
+function handleSend() {
+  const text = inputEl.value.trim(); if(!text) return;
+  appendUser(text); inputEl.value='';
+  showTyping();
+  setTimeout(()=>{ removeTyping(); appendBot(decide(text), text); }, 520);
+}
+
+function quickSend(text) {
+  inputEl.value = text; handleSend();
+}
+
+inputEl.addEventListener('keydown', e=>{ if(e.key==='Enter') handleSend(); });
+
+// Try-these
+const TRIES = [
+  { cat:'✓ Will answer',    q:'What is the hostel fee?' },
+  { cat:'✓ Will answer',    q:'Tell me about scholarships' },
+  { cat:'? Will clarify',   q:'I need some information' },
+  { cat:'? Will clarify',   q:'What is the schedule?' },
+  { cat:'→ Will suggest',   q:'I am confused about something' },
+  { cat:'→ Will suggest',   q:'xyzabc random gibberish' },
+  { cat:'⚑ Will hand over', q:'I want to file a complaint' },
+  { cat:'⚑ Will hand over', q:'I need to see the doctor' },
+  { cat:'⚑ Will hand over', q:'This is an emergency!' },
+];
+const tl = document.getElementById('try-list');
+TRIES.forEach(t=>{
+  const d=document.createElement('div'); d.className='try-item';
+  d.innerHTML=`<span class="try-cat">${t.cat}</span>${t.q}`;
+  d.onclick=()=>quickSend(t.q); tl.appendChild(d);
+});
+
+// welcome
+setTimeout(()=>{
+  appendBot({
+    type:'clarify',
+    question:"Welcome to the Institute Help Desk! 🎓\n\nI'll try to answer your question directly. If I can't, I'll ask for clarification, suggest related topics, or route you to the right human advisor.\n\nWhat can I help you with today?",
+    chips:["Fees","Exam schedule","Hostel","Admissions","Timetable"]
+  }, 'welcome');
+  logCount = 0; document.getElementById('log-count').textContent = 0;
+  document.getElementById('log-list').innerHTML = '<div class="log-empty">// no escalations yet</div>';
+}, 300);
+</script>
+</body>
+</html>
