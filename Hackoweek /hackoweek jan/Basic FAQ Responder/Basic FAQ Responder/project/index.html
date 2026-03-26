@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Institute Help Desk - Educational Chatbot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .chatbot-container {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            height: 700px;
+            overflow: hidden;
+        }
+
+        .chatbot-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 3px solid #5568d3;
+        }
+
+        .chatbot-header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .chatbot-header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message.bot {
+            justify-content: flex-start;
+        }
+
+        .message-bubble {
+            max-width: 75%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            line-height: 1.5;
+            font-size: 15px;
+            white-space: pre-line;
+        }
+
+        .message.user .message-bubble {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.bot .message-bubble {
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-area {
+            display: flex;
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .input-field {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .input-field:focus {
+            border-color: #667eea;
+        }
+
+        .send-button {
+            margin-left: 10px;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .send-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .send-button:active {
+            transform: translateY(0);
+        }
+
+        .chat-area::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-area::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .chat-area::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 4px;
+        }
+
+        .welcome-message {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="chatbot-container">
+        <div class="chatbot-header">
+            <h1>Institute Help Desk</h1>
+            <p>Ask me about courses, fees, admissions, and more</p>
+        </div>
+
+        <div class="chat-area" id="chatArea">
+            <div class="welcome-message">
+                Welcome! How can I help you today?
+            </div>
+        </div>
+
+        <div class="input-area">
+            <input
+                type="text"
+                id="userInput"
+                class="input-field"
+                placeholder="Type your question here..."
+                autocomplete="off"
+            >
+            <button class="send-button" id="sendButton">Send</button>
+        </div>
+    </div>
+
+    <script>
+        // =====================================
+        // TEXT PREPROCESSING PIPELINE
+        // =====================================
+
+        // Common English stopwords to remove
+        const STOPWORDS = new Set([
+            'a', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'for', 'from',
+            'has', 'he', 'in', 'is', 'it', 'its', 'of', 'on', 'that', 'the',
+            'to', 'was', 'will', 'with', 'can', 'could', 'what', 'when', 'where',
+            'who', 'how', 'i', 'me', 'my', 'we', 'our', 'you', 'your', 'do',
+            'does', 'did', 'have', 'want', 'know', 'tell', 'about', 'any'
+        ]);
+
+        // Spelling normalization rules (plural to singular, common variations)
+        const NORMALIZATION_MAP = {
+            'fees': 'fee',
+            'timings': 'timing',
+            'courses': 'course',
+            'admissions': 'admission',
+            'details': 'detail',
+            'facilities': 'facility',
+            'placements': 'placement',
+            'hostels': 'hostel',
+            'scholarships': 'scholarship',
+            'programs': 'program',
+            'subjects': 'subject',
+            'exams': 'exam',
+            'examination': 'exam',
+            'examinations': 'exam',
+            'eligibility': 'eligible',
+            'requirements': 'requirement',
+            'process': 'procedure',
+            'timing': 'time',
+            'schedule': 'time',
+            'schedules': 'time',
+            'contact': 'contacts',
+            'location': 'address',
+            'locations': 'address',
+            'place': 'address',
+            'situated': 'address'
+        };
+
+        /**
+         * Step 1: Convert text to lowercase
+         */
+        function toLowerCase(text) {
+            return text.toLowerCase();
+        }
+
+        /**
+         * Step 2: Remove punctuation from text
+         */
+        function removePunctuation(text) {
+            return text.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"']/g, '');
+        }
+
+        /**
+         * Step 3: Tokenize text into individual words
+         */
+        function tokenize(text) {
+            return text.split(/\s+/).filter(word => word.length > 0);
+        }
+
+        /**
+         * Step 4: Remove common stopwords
+         */
+        function removeStopwords(tokens) {
+            return tokens.filter(token => !STOPWORDS.has(token));
+        }
+
+        /**
+         * Step 5: Normalize spelling variations
+         */
+        function normalizeTokens(tokens) {
+            return tokens.map(token => NORMALIZATION_MAP[token] || token);
+        }
+
+        /**
+         * Complete preprocessing pipeline
+         */
+        function preprocessText(text) {
+            let processed = toLowerCase(text);
+            processed = removePunctuation(processed);
+            let tokens = tokenize(processed);
+            tokens = removeStopwords(tokens);
+            tokens = normalizeTokens(tokens);
+            return tokens;
+        }
+
+        // =====================================
+        // RULE-BASED CHATBOT LOGIC
+        // =====================================
+
+        // Knowledge base with 15 FAQ responses
+        const KNOWLEDGE_BASE = {
+            timing: {
+                keywords: ['time', 'timing', 'hour', 'open', 'close', 'working'],
+                response: "Our institute is open from Monday to Saturday, 8:00 AM to 6:00 PM. Sunday is a holiday. Office hours are 9:00 AM to 5:00 PM."
+            },
+            fee: {
+                keywords: ['fee', 'cost', 'tuition', 'price', 'payment', 'pay', 'money', 'charge'],
+                response: "Fee structure varies by course:\n- Engineering: ₹1,20,000 per year\n- Management: ₹90,000 per year\n- Computer Applications: ₹70,000 per year\nPayment can be made in two installments per semester."
+            },
+            course: {
+                keywords: ['course', 'program', 'degree', 'study', 'branch', 'stream', 'offer'],
+                response: "We offer the following courses:\n- B.Tech (Computer Science, Mechanical, Civil, Electrical)\n- MBA (Finance, Marketing, HR)\n- MCA (Master of Computer Applications)\n- Diploma in Engineering\nAll programs are affiliated with the State University."
+            },
+            admission: {
+                keywords: ['admission', 'apply', 'join', 'enroll', 'entry', 'eligible', 'eligibility'],
+                response: "Admission process:\n1. Fill online application form\n2. Submit required documents (10th, 12th marksheets, ID proof)\n3. Entrance test or merit-based selection\n4. Interview (for some courses)\n5. Fee payment\nAdmissions open in May-June each year."
+            },
+            contact: {
+                keywords: ['contact', 'phone', 'email', 'call', 'reach', 'number', 'mail'],
+                response: "Contact Information:\n📞 Phone: +91-9876543210\n📧 Email: info@institute.edu.in\n📧 Admissions: admissions@institute.edu.in\nYou can also visit our office during working hours."
+            },
+            address: {
+                keywords: ['address', 'location', 'where', 'situated', 'find', 'place', 'visit'],
+                response: "Our institute is located at:\n123, Education Street, University Road,\nTech City - 560001\nNear City Mall, opposite Central Park.\nEasily accessible by public transport."
+            },
+            hostel: {
+                keywords: ['hostel', 'accommodation', 'room', 'stay', 'residence', 'living'],
+                response: "Hostel facilities available:\n- Separate hostels for boys and girls\n- AC and Non-AC rooms\n- 24/7 security and warden supervision\n- Mess facility with nutritious food\n- Wi-Fi enabled\n- Hostel fee: ₹50,000 per year (including food)"
+            },
+            placement: {
+                keywords: ['placement', 'job', 'career', 'recruit', 'company', 'salary', 'package'],
+                response: "Placement highlights:\n- 85% placement record\n- Top recruiters: TCS, Infosys, Wipro, Amazon, Microsoft\n- Average package: ₹4.5 LPA\n- Highest package: ₹12 LPA\n- Dedicated Training & Placement cell\n- Mock interviews and aptitude training provided"
+            },
+            faculty: {
+                keywords: ['faculty', 'teacher', 'professor', 'staff', 'instructor', 'lecturer'],
+                response: "Our institute has highly qualified faculty:\n- PhD and M.Tech/MBA qualified professors\n- Industry experience of 5-20 years\n- Regular training and development programs\n- Student-faculty ratio: 15:1\n- Dedicated mentorship program"
+            },
+            library: {
+                keywords: ['library', 'book', 'reading', 'resource'],
+                response: "Library facilities:\n- 25,000+ books collection\n- Digital library with e-journals and e-books\n- Reading room with 200 seating capacity\n- Open from 8 AM to 8 PM\n- Library card issued to all students"
+            },
+            scholarship: {
+                keywords: ['scholarship', 'financial', 'aid', 'concession', 'waiver'],
+                response: "Scholarship opportunities:\n- Merit-based scholarships (up to 50% fee waiver)\n- Government scholarships for SC/ST/OBC candidates\n- Financial assistance for economically weaker students\n- Sports quota scholarships\nApply during admission process with required documents."
+            },
+            infrastructure: {
+                keywords: ['infrastructure', 'facility', 'lab', 'laboratory', 'building', 'campus'],
+                response: "Infrastructure facilities:\n- Modern air-conditioned classrooms\n- Well-equipped computer labs\n- Engineering workshops and labs\n- Sports complex with indoor/outdoor games\n- Cafeteria and food court\n- Medical facilities\n- 24/7 power backup"
+            },
+            exam: {
+                keywords: ['exam', 'examination', 'test', 'assessment', 'result'],
+                response: "Examination system:\n- Semester-based evaluation\n- Mid-term and end-term examinations\n- Internal assessment through assignments and projects\n- Results declared within 30 days\n- Online result portal available\n- Revaluation facility available"
+            },
+            sports: {
+                keywords: ['sport', 'game', 'athletic', 'fitness', 'gym', 'play'],
+                response: "Sports facilities:\n- Cricket ground and football field\n- Basketball and volleyball courts\n- Indoor games: Table tennis, badminton, chess\n- Gymnasium with modern equipment\n- Annual sports meet and inter-college competitions\n- Professional coaches available"
+            },
+            transport: {
+                keywords: ['transport', 'bus', 'travel', 'commute', 'vehicle'],
+                response: "Transport facilities:\n- College buses covering major routes in the city\n- GPS-enabled buses for safety\n- Reasonable transport fees\n- Pickup and drop facility\n- Ample parking space for students with vehicles\nContact office for route details."
+            }
+        };
+
+        /**
+         * Match user query with knowledge base using preprocessed tokens
+         */
+        function getResponse(userInput) {
+            const tokens = preprocessText(userInput);
+
+            // Try to match tokens with keywords in knowledge base
+            for (const [category, data] of Object.entries(KNOWLEDGE_BASE)) {
+                for (const keyword of data.keywords) {
+                    if (tokens.includes(keyword)) {
+                        return data.response;
+                    }
+                }
+            }
+
+            // No match found
+            return "Sorry, I can only answer institute-related questions. Please ask about courses, fees, admissions, placements, facilities, or contact information.";
+        }
+
+        // =====================================
+        // UI HANDLING
+        // =====================================
+
+        const chatArea = document.getElementById('chatArea');
+        const userInput = document.getElementById('userInput');
+        const sendButton = document.getElementById('sendButton');
+
+        /**
+         * Add a message to the chat area
+         */
+        function addMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.className = 'message-bubble';
+            bubbleDiv.textContent = text;
+
+            messageDiv.appendChild(bubbleDiv);
+            chatArea.appendChild(messageDiv);
+
+            // Auto-scroll to latest message
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        /**
+         * Handle sending a message
+         */
+        function sendMessage() {
+            const message = userInput.value.trim();
+
+            if (message === '') {
+                return;
+            }
+
+            // Add user message to chat
+            addMessage(message, 'user');
+
+            // Get bot response using rule-based logic
+            const response = getResponse(message);
+
+            // Add bot response with slight delay for natural feel
+            setTimeout(() => {
+                addMessage(response, 'bot');
+            }, 500);
+
+            // Clear input field
+            userInput.value = '';
+        }
+
+        // Event listeners
+        sendButton.addEventListener('click', sendMessage);
+
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Focus on input field when page loads
+        userInput.focus();
+    </script>
+</body>
+</html>
