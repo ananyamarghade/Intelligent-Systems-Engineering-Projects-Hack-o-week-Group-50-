@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EntityLens — Academic NLP Engine</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a28;
+    --border: #2a2a40;
+    --accent: #7c6af7;
+    --accent2: #f7a26a;
+    --accent3: #6af7c8;
+    --accent4: #f76a8a;
+    --text: #e8e8f0;
+    --muted: #6868a0;
+    --tag-date: #1a2a1a;
+    --tag-date-fg: #6af7a2;
+    --tag-date-border: #3a6a3a;
+    --tag-course: #1a1a2a;
+    --tag-course-fg: #a26af7;
+    --tag-course-border: #4a3a7a;
+    --tag-sem: #2a1a1a;
+    --tag-sem-fg: #f7a26a;
+    --tag-sem-border: #6a3a1a;
+    --tag-dept: #1a2a2a;
+    --tag-dept-fg: #6af7f7;
+    --tag-dept-border: #1a5a5a;
+    --tag-exam: #2a1a2a;
+    --tag-exam-fg: #f76af7;
+    --tag-exam-border: #6a1a6a;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* GRID BACKGROUND */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(124,106,247,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,106,247,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none; z-index: 0;
+  }
+
+  .container { max-width: 960px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  /* HEADER */
+  header {
+    padding: 48px 0 32px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 48px;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    flex-wrap: wrap; gap: 16px;
+  }
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-icon {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+  .logo-text { font-size: 28px; font-weight: 800; letter-spacing: -1px; }
+  .logo-text span { color: var(--accent3); }
+  .header-sub { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; }
+  .badge {
+    font-family: 'Space Mono', monospace; font-size: 10px;
+    background: var(--surface2); border: 1px solid var(--border);
+    padding: 6px 12px; border-radius: 20px; color: var(--accent);
+    letter-spacing: 1px;
+  }
+
+  /* INPUT SECTION */
+  .input-section { margin-bottom: 40px; }
+  .input-label {
+    font-size: 12px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 10px; display: block;
+    font-family: 'Space Mono', monospace;
+  }
+  .input-wrap { position: relative; }
+  textarea {
+    width: 100%; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 20px 24px; color: var(--text);
+    font-family: 'Syne', sans-serif; font-size: 16px; resize: none;
+    outline: none; transition: border-color 0.2s;
+    line-height: 1.6; min-height: 100px;
+  }
+  textarea:focus { border-color: var(--accent); }
+  textarea::placeholder { color: var(--muted); }
+
+  .example-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .chip {
+    font-family: 'Space Mono', monospace; font-size: 11px;
+    background: var(--surface2); border: 1px solid var(--border);
+    padding: 6px 12px; border-radius: 20px; color: var(--muted);
+    cursor: pointer; transition: all 0.15s; user-select: none;
+  }
+  .chip:hover { border-color: var(--accent); color: var(--accent); background: rgba(124,106,247,0.1); }
+
+  .actions { display: flex; gap: 12px; margin-top: 16px; align-items: center; }
+  .btn-analyze {
+    background: linear-gradient(135deg, var(--accent), #5a48d0);
+    color: #fff; border: none; padding: 14px 32px;
+    border-radius: 12px; font-family: 'Syne', sans-serif; font-weight: 700;
+    font-size: 14px; cursor: pointer; letter-spacing: 0.5px;
+    transition: all 0.2s; display: flex; align-items: center; gap: 8px;
+  }
+  .btn-analyze:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(124,106,247,0.4); }
+  .btn-analyze:active { transform: translateY(0); }
+  .btn-clear {
+    background: transparent; color: var(--muted); border: 1px solid var(--border);
+    padding: 14px 20px; border-radius: 12px; font-family: 'Syne', sans-serif;
+    font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-clear:hover { border-color: var(--accent4); color: var(--accent4); }
+
+  .char-count {
+    font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted);
+    margin-left: auto;
+  }
+
+  /* RESULTS */
+  .results { display: none; }
+  .results.visible { display: block; }
+
+  .section-title {
+    font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 20px; font-family: 'Space Mono', monospace;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* HIGHLIGHTED TEXT */
+  .highlight-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 24px; margin-bottom: 32px;
+    font-size: 17px; line-height: 1.8;
+  }
+  .hl { border-radius: 5px; padding: 2px 6px; font-weight: 600; cursor: pointer; transition: filter 0.15s; position: relative; display: inline; }
+  .hl:hover { filter: brightness(1.2); }
+  .hl-date { background: var(--tag-date); color: var(--tag-date-fg); border: 1px solid var(--tag-date-border); }
+  .hl-course { background: var(--tag-course); color: var(--tag-course-fg); border: 1px solid var(--tag-course-border); }
+  .hl-sem { background: var(--tag-sem); color: var(--tag-sem-fg); border: 1px solid var(--tag-sem-border); }
+  .hl-dept { background: var(--tag-dept); color: var(--tag-dept-fg); border: 1px solid var(--tag-dept-border); }
+  .hl-exam { background: var(--tag-exam); color: var(--tag-exam-fg); border: 1px solid var(--tag-exam-border); }
+
+  /* ENTITY GRID */
+  .entity-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 32px; }
+  .entity-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 20px; transition: border-color 0.2s;
+    position: relative; overflow: hidden;
+  }
+  .entity-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  }
+  .entity-card.date::before { background: var(--tag-date-fg); }
+  .entity-card.course::before { background: var(--tag-course-fg); }
+  .entity-card.sem::before { background: var(--tag-sem-fg); }
+  .entity-card.dept::before { background: var(--tag-dept-fg); }
+  .entity-card.exam::before { background: var(--tag-exam-fg); }
+  .entity-card:hover { border-color: var(--accent); }
+  .card-type {
+    font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 8px;
+  }
+  .card-values { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .entity-tag {
+    font-family: 'Space Mono', monospace; font-size: 12px;
+    padding: 4px 10px; border-radius: 6px; font-weight: 700;
+  }
+  .entity-tag.date { background: var(--tag-date); color: var(--tag-date-fg); border: 1px solid var(--tag-date-border); }
+  .entity-tag.course { background: var(--tag-course); color: var(--tag-course-fg); border: 1px solid var(--tag-course-border); }
+  .entity-tag.sem { background: var(--tag-sem); color: var(--tag-sem-fg); border: 1px solid var(--tag-sem-border); }
+  .entity-tag.dept { background: var(--tag-dept); color: var(--tag-dept-fg); border: 1px solid var(--tag-dept-border); }
+  .entity-tag.exam { background: var(--tag-exam); color: var(--tag-exam-fg); border: 1px solid var(--tag-exam-border); }
+  .card-count {
+    font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted);
+  }
+  .card-icon { position: absolute; top: 16px; right: 16px; font-size: 20px; opacity: 0.3; }
+
+  /* STRUCTURED RESPONSE */
+  .response-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 24px; margin-bottom: 32px;
+  }
+  .response-header {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
+  }
+  .response-dot {
+    width: 8px; height: 8px; border-radius: 50%; background: var(--accent3);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .response-label { font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent3); font-family: 'Space Mono', monospace; }
+  .response-text { font-size: 15px; line-height: 1.8; color: var(--text); }
+  .response-text strong { color: var(--accent3); }
+
+  /* INTENT / CONFIDENCE */
+  .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px; }
+  @media (max-width: 500px) { .meta-grid { grid-template-columns: 1fr; } }
+  .meta-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 20px;
+  }
+  .meta-label { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+  .meta-value { font-size: 18px; font-weight: 700; }
+  .confidence-bar { height: 6px; background: var(--border); border-radius: 3px; margin-top: 10px; overflow: hidden; }
+  .confidence-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent), var(--accent3)); transition: width 0.8s cubic-bezier(.4,0,.2,1); }
+  .intent-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: 'Space Mono', monospace; font-size: 12px;
+    padding: 6px 12px; border-radius: 8px;
+    background: rgba(124,106,247,0.15); border: 1px solid rgba(124,106,247,0.3);
+    color: var(--accent);
+  }
+
+  /* JSON PANEL */
+  .json-panel {
+    background: #0d0d14; border: 1px solid var(--border);
+    border-radius: 16px; overflow: hidden; margin-bottom: 32px;
+  }
+  .json-header {
+    background: var(--surface); padding: 14px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .json-title { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 2px; }
+  .copy-btn {
+    font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted);
+    background: transparent; border: 1px solid var(--border);
+    padding: 4px 10px; border-radius: 6px; cursor: pointer; transition: all 0.15s;
+  }
+  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .json-body { padding: 20px; font-family: 'Space Mono', monospace; font-size: 12px; line-height: 1.8; overflow-x: auto; }
+  .jk { color: var(--accent); } .jv { color: var(--accent3); } .js { color: var(--accent2); } .jn { color: var(--accent4); } .jb { color: #6af7f7; }
+
+  /* HISTORY */
+  .history-section { margin-bottom: 48px; }
+  .history-list { display: flex; flex-direction: column; gap: 10px; }
+  .history-item {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 18px; cursor: pointer;
+    display: flex; align-items: center; gap: 14px; transition: all 0.15s;
+  }
+  .history-item:hover { border-color: var(--accent); background: var(--surface2); }
+  .history-text { flex: 1; font-size: 14px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .history-tags { display: flex; gap: 6px; flex-shrink: 0; }
+  .history-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 6px; }
+
+  /* LEGEND */
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 24px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); font-family: 'Space Mono', monospace; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+
+  /* STATS */
+  .stats-bar {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px 24px;
+    display: flex; gap: 32px; flex-wrap: wrap; margin-bottom: 24px;
+  }
+  .stat { text-align: center; }
+  .stat-num { font-size: 24px; font-weight: 800; font-family: 'Space Mono', monospace; }
+  .stat-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+
+  /* TOOLTIP */
+  .tooltip {
+    position: fixed; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 12px; font-size: 12px; font-family: 'Space Mono', monospace;
+    color: var(--text); pointer-events: none; opacity: 0; transition: opacity 0.15s;
+    z-index: 1000; max-width: 200px;
+  }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center; padding: 60px 20px; color: var(--muted);
+  }
+  .empty-icon { font-size: 48px; margin-bottom: 16px; }
+  .empty-text { font-size: 14px; line-height: 1.6; }
+
+  /* ANIMATIONS */
+  .fade-in { animation: fadeIn 0.4s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* TABS */
+  .tab-bar { display: flex; gap: 4px; margin-bottom: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 4px; }
+  .tab { flex: 1; text-align: center; padding: 10px; border-radius: 9px; cursor: pointer; font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); transition: all 0.15s; font-family: 'Space Mono', monospace; }
+  .tab.active { background: var(--surface2); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+</style>
+</head>
+<body>
+<div class="tooltip" id="tooltip"></div>
+
+<div class="container">
+  <header>
+    <div class="logo">
+      <div class="logo-icon">🔍</div>
+      <div>
+        <div class="logo-text">Entity<span>Lens</span></div>
+        <div class="header-sub">Academic NLP Entity Extractor</div>
+      </div>
+    </div>
+    <div class="badge">v2.0 · REGEX + NLP ENGINE</div>
+  </header>
+
+  <!-- INPUT -->
+  <div class="input-section">
+    <label class="input-label">Query Input</label>
+    <div class="input-wrap">
+      <textarea id="queryInput" rows="4" placeholder="e.g. When is the SEM 5 CS101 exam on 15th March 2025? Or what are the CS and IT timetable for semester 3?"></textarea>
+    </div>
+    <div class="example-chips" id="exampleChips">
+      <span class="chip" onclick="fillExample(this)">When is SEM 5 CS exam?</span>
+      <span class="chip" onclick="fillExample(this)">CS101 and IT204 midterm on 20 April</span>
+      <span class="chip" onclick="fillExample(this)">SEM 3 Mathematics timetable for Nov 2025</span>
+      <span class="chip" onclick="fillExample(this)">Final exam for ECE 6th semester on 15/03/2025</span>
+      <span class="chip" onclick="fillExample(this)">DBMS and OS practical exam next Monday SEM 4</span>
+      <span class="chip" onclick="fillExample(this)">CS302 backlog exam date in January for 3rd year</span>
+    </div>
+    <div class="actions">
+      <button class="btn-analyze" id="analyzeBtn" onclick="analyze()">
+        <span id="btnIcon">⚡</span>
+        <span id="btnText">Analyze Query</span>
+      </button>
+      <button class="btn-clear" onclick="clearAll()">Clear</button>
+      <span class="char-count" id="charCount">0 chars</span>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results" id="results">
+    <!-- STATS -->
+    <div class="stats-bar fade-in" id="statsBar"></div>
+
+    <!-- LEGEND -->
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--tag-date-fg)"></div>DATE</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--tag-course-fg)"></div>COURSE CODE</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--tag-sem-fg)"></div>SEMESTER</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--tag-dept-fg)"></div>DEPARTMENT</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--tag-exam-fg)"></div>EXAM TYPE</div>
+    </div>
+
+    <!-- HIGHLIGHTED TEXT -->
+    <div class="section-title">Annotated Query</div>
+    <div class="highlight-box fade-in" id="highlightBox"></div>
+
+    <!-- TABS -->
+    <div class="tab-bar">
+      <div class="tab active" onclick="switchTab('entities')">Entities</div>
+      <div class="tab" onclick="switchTab('response')">Response</div>
+      <div class="tab" onclick="switchTab('json')">JSON</div>
+      <div class="tab" onclick="switchTab('meta')">Analysis</div>
+    </div>
+
+    <div class="tab-panel active" id="tab-entities">
+      <div class="entity-grid fade-in" id="entityGrid"></div>
+    </div>
+
+    <div class="tab-panel" id="tab-response">
+      <div class="response-box fade-in" id="responseBox">
+        <div class="response-header">
+          <div class="response-dot"></div>
+          <div class="response-label">Generated Response</div>
+        </div>
+        <div class="response-text" id="responseText"></div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tab-json">
+      <div class="json-panel fade-in">
+        <div class="json-header">
+          <span class="json-title">EXTRACTED ENTITIES · JSON</span>
+          <button class="copy-btn" onclick="copyJSON()">COPY</button>
+        </div>
+        <div class="json-body" id="jsonBody"></div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tab-meta">
+      <div class="meta-grid fade-in" id="metaGrid"></div>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="history-section" id="historySection" style="display:none">
+    <div class="section-title">Recent Queries</div>
+    <div class="history-list" id="historyList"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// ENTITY EXTRACTOR ENGINE
+// ============================================================
+
+const PATTERNS = {
+  // Dates: 15th March, March 15, 15/03/2025, 2025-03-15, "next Monday", "this week"
+  date: [
+    /\b(\d{1,2}(?:st|nd|rd|th)?\s+(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)(?:\s+\d{2,4})?)\b/gi,
+    /\b((?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+\d{1,2}(?:st|nd|rd|th)?(?:\s*,?\s*\d{2,4})?)\b/gi,
+    /\b(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})\b/g,
+    /\b(\d{4}[\/\-\.]\d{1,2}[\/\-\.]\d{1,2})\b/g,
+    /\b(next\s+(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|week|month))\b/gi,
+    /\b(this\s+(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|week|month))\b/gi,
+    /\b((?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+\d{4})\b/gi,
+    /\b(today|tomorrow|yesterday)\b/gi,
+  ],
+  // Course codes: CS101, IT204, DBMS, ECE302, Math, Physics etc.
+  course: [
+    /\b([A-Z]{2,5}\d{2,4}[A-Z]?)\b/g,
+    /\b(DBMS|OS|CN|SE|AI|ML|NLP|DSA|OOP|IOT|VLSI|CAD|CAM|FEM|CFD)\b/g,
+    /\b(mathematics?|physics?|chemistry|english|calculus|statistics?|mechanics?|thermodynamics?|algorithms?|networks?|systems?|databases?)\b/gi,
+  ],
+  // Semester
+  sem: [
+    /\b(sem(?:ester)?\s*[-:]?\s*\d{1,2})\b/gi,
+    /\b(\d{1,2}(?:st|nd|rd|th)\s+sem(?:ester)?)\b/gi,
+    /\b(\d{1,2}(?:st|nd|rd|th)\s+year)\b/gi,
+    /\b(first|second|third|fourth|fifth|sixth|seventh|eighth)\s+sem(?:ester)?\b/gi,
+    /\b(sem\s*[1-8])\b/gi,
+  ],
+  // Department
+  dept: [
+    /\b(computer\s+science(?:\s+engineering)?|CSE|CS|information\s+technology|IT|electronics?\s+(?:and\s+)?(?:communication\s+)?engineering?|ECE|EEE|EE|mechanical\s+engineering?|ME|MECH|civil\s+engineering?|CE|CIVIL|chemical\s+engineering?|CHE|CHEM|biotech(?:nology)?|BT|BIO)\b/gi,
+  ],
+  // Exam types
+  exam: [
+    /\b(mid[-\s]?term|midterm|mid[-\s]?sem|midsem|final\s+exam|internal|external|practical|viva|backlog|re[-\s]?exam|supplementary|unit\s+test|sessional|end[-\s]?sem|end\s+semester)\b/gi,
+  ],
+};
+
+const ENTITY_META = {
+  date:   { label: 'DATE',        icon: '📅', color: 'date',   desc: 'Date or time expression' },
+  course: { label: 'COURSE CODE', icon: '📚', color: 'course', desc: 'Subject or course identifier' },
+  sem:    { label: 'SEMESTER',    icon: '🎓', color: 'sem',    desc: 'Academic semester/year' },
+  dept:   { label: 'DEPARTMENT',  icon: '🏛️', color: 'dept',   desc: 'Academic department' },
+  exam:   { label: 'EXAM TYPE',   icon: '📝', color: 'exam',   desc: 'Type of examination' },
+};
+
+const INTENTS = [
+  { pattern: /timetable|schedule|time\s*table/i, label: 'SCHEDULE LOOKUP', icon: '📆' },
+  { pattern: /when\s+is|what\s+date|exam\s+date/i, label: 'DATE INQUIRY', icon: '🗓️' },
+  { pattern: /result|marks?|grade|score/i, label: 'RESULT QUERY', icon: '📊' },
+  { pattern: /syllabus|topic|subject|course\s+content/i, label: 'SYLLABUS INFO', icon: '📖' },
+  { pattern: /admit\s*card|hall\s*ticket/i, label: 'ADMIT CARD', icon: '🎫' },
+  { pattern: /backlog|supplementary|re\s*exam/i, label: 'BACKLOG EXAM', icon: '🔁' },
+  { pattern: /practical|viva|lab/i, label: 'PRACTICAL EXAM', icon: '🔬' },
+  { pattern: /fee|payment|due/i, label: 'FEE INQUIRY', icon: '💰' },
+];
+
+let queryHistory = [];
+let lastResult = null;
+
+function extractEntities(text) {
+  const found = { date: [], course: [], sem: [], dept: [], exam: [] };
+  const spans = [];
+
+  for (const [type, patterns] of Object.entries(PATTERNS)) {
+    for (const pat of patterns) {
+      pat.lastIndex = 0;
+      let m;
+      while ((m = pat.exec(text)) !== null) {
+        const val = m[1] || m[0];
+        const norm = normalizeEntity(type, val.trim());
+        if (!found[type].some(e => e.raw === val.trim())) {
+          found[type].push({ raw: val.trim(), norm, start: m.index, end: m.index + val.length });
+          spans.push({ start: m.index, end: m.index + (m[1]||m[0]).length, type, value: val.trim() });
+        }
+      }
+    }
+  }
+
+  // Remove duplicate spans (overlapping)
+  spans.sort((a, b) => a.start - b.start);
+  const clean = [];
+  let last = -1;
+  for (const s of spans) {
+    if (s.start >= last) { clean.push(s); last = s.end; }
+  }
+
+  return { entities: found, spans: clean };
+}
+
+function normalizeEntity(type, val) {
+  if (type === 'sem') {
+    const n = val.match(/\d+/);
+    return n ? `Semester ${n[0]}` : val;
+  }
+  if (type === 'dept') {
+    const map = { cse:'Computer Science', cs:'Computer Science', it:'Information Technology', ece:'Electronics & Comm.', eee:'Electrical & Electronics', me:'Mechanical Engg.', mech:'Mechanical Engg.', civil:'Civil Engg.', ce:'Civil Engg.', che:'Chemical Engg.' };
+    return map[val.toLowerCase()] || val.toUpperCase();
+  }
+  if (type === 'course') {
+    const map = { dbms:'Database Management Systems', os:'Operating Systems', cn:'Computer Networks', se:'Software Engineering', ai:'Artificial Intelligence', ml:'Machine Learning', nlp:'Natural Language Processing', dsa:'Data Structures & Algorithms' };
+    return map[val.toLowerCase()] || val.toUpperCase();
+  }
+  if (type === 'date') {
+    return val.charAt(0).toUpperCase() + val.slice(1);
+  }
+  return val;
+}
+
+function detectIntent(text) {
+  for (const i of INTENTS) {
+    if (i.pattern.test(text)) return i;
+  }
+  return { label: 'GENERAL INQUIRY', icon: '❓' };
+}
+
+function calcConfidence(entities) {
+  const total = Object.values(entities).reduce((s, arr) => s + arr.length, 0);
+  if (total === 0) return 10;
+  const types = Object.values(entities).filter(a => a.length > 0).length;
+  return Math.min(95, 40 + types * 15 + Math.min(total, 4) * 5);
+}
+
+function buildHighlighted(text, spans) {
+  let out = '';
+  let i = 0;
+  for (const sp of spans) {
+    out += escHtml(text.slice(i, sp.start));
+    const meta = ENTITY_META[sp.type];
+    out += `<span class="hl hl-${sp.type}" title="${meta.label}: ${sp.value}" data-type="${sp.type}" data-val="${escAttr(sp.value)}">${escHtml(sp.value)}</span>`;
+    i = sp.end;
+  }
+  out += escHtml(text.slice(i));
+  return out || escHtml(text);
+}
+
+function buildResponse(text, entities, intent) {
+  const dates = entities.date.map(e => `<strong>${e.norm}</strong>`);
+  const courses = entities.course.map(e => `<strong>${e.norm}</strong>`);
+  const sems = entities.sem.map(e => `<strong>${e.norm}</strong>`);
+  const depts = entities.dept.map(e => `<strong>${e.norm}</strong>`);
+  const exams = entities.exam.map(e => `<strong>${e.raw}</strong>`);
+
+  const parts = [];
+  if (intent.label === 'DATE INQUIRY' || intent.label === 'SCHEDULE LOOKUP') {
+    parts.push(`Based on your query, you are asking about the ${exams.length ? exams.join(', ') + ' ' : ''}schedule`);
+    if (courses.length) parts[parts.length-1] += ` for ${courses.join(', ')}`;
+    if (sems.length) parts[parts.length-1] += ` in ${sems.join(', ')}`;
+    if (depts.length) parts[parts.length-1] += ` (${depts.join('/')})`;
+    parts[parts.length-1] += '.';
+    if (dates.length) parts.push(`The date(s) mentioned: ${dates.join(', ')}.`);
+    else parts.push(`No specific date was mentioned — please check the official portal for updated exam dates.`);
+  } else if (intent.label === 'BACKLOG EXAM') {
+    parts.push(`This appears to be a backlog/supplementary exam inquiry.`);
+    if (courses.length) parts.push(`Courses: ${courses.join(', ')}.`);
+    if (sems.length) parts.push(`Semester: ${sems.join(', ')}.`);
+    if (dates.length) parts.push(`Date mentioned: ${dates.join(', ')}.`);
+  } else {
+    if (courses.length) parts.push(`Courses identified: ${courses.join(', ')}.`);
+    if (sems.length) parts.push(`Semester: ${sems.join(', ')}.`);
+    if (depts.length) parts.push(`Department: ${depts.join(', ')}.`);
+    if (dates.length) parts.push(`Date(s): ${dates.join(', ')}.`);
+    if (exams.length) parts.push(`Exam type: ${exams.join(', ')}.`);
+    if (!parts.length) parts.push('No structured academic entities were extracted from this query. Try adding course codes, semester numbers, or dates.');
+  }
+
+  return parts.join(' ');
+}
+
+function buildJSON(entities, intent, confidence) {
+  const obj = {
+    query_analysis: { intent: intent.label, confidence: confidence + '%', entities_found: Object.values(entities).reduce((s,a)=>s+a.length,0) },
+    entities: {}
+  };
+  for (const [type, arr] of Object.entries(entities)) {
+    if (arr.length) obj.entities[type] = arr.map(e => ({ raw: e.raw, normalized: e.norm }));
+  }
+  return obj;
+}
+
+function renderJSON(obj) {
+  return syntaxHighlight(JSON.stringify(obj, null, 2));
+}
+
+function syntaxHighlight(str) {
+  return str
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"([^"]+)":/g, '<span class="jk">"$1"</span>:')
+    .replace(/: "([^"]+)"/g, ': <span class="js">"$1"</span>')
+    .replace(/: (\d+)/g, ': <span class="jn">$1</span>')
+    .replace(/: (true|false)/g, ': <span class="jb">$1</span>');
+}
+
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escAttr(s) { return s.replace(/"/g,'&quot;'); }
+
+// ============================================================
+// UI
+// ============================================================
+
+function analyze() {
+  const text = document.getElementById('queryInput').value.trim();
+  if (!text) { shakeInput(); return; }
+
+  setBtnLoading(true);
+
+  setTimeout(() => {
+    const { entities, spans } = extractEntities(text);
+    const intent = detectIntent(text);
+    const confidence = calcConfidence(entities);
+    const jsonObj = buildJSON(entities, intent, confidence);
+    lastResult = jsonObj;
+
+    document.getElementById('statsBar').innerHTML = buildStats(entities);
+    document.getElementById('highlightBox').innerHTML = buildHighlighted(text, spans);
+    document.getElementById('entityGrid').innerHTML = buildEntityGrid(entities);
+    document.getElementById('responseText').innerHTML = buildResponse(text, entities, intent);
+    document.getElementById('jsonBody').innerHTML = renderJSON(jsonObj);
+    document.getElementById('metaGrid').innerHTML = buildMeta(intent, confidence, text, entities);
+
+    document.getElementById('results').classList.add('visible');
+    setBtnLoading(false);
+
+    // history
+    addHistory(text, entities, intent);
+
+    // bind hover tooltips
+    bindTooltips();
+
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 300);
+}
+
+function buildStats(entities) {
+  const total = Object.values(entities).reduce((s,a)=>s+a.length,0);
+  const types = Object.values(entities).filter(a=>a.length>0).length;
+  return `
+    <div class="stat"><div class="stat-num" style="color:var(--accent)">${total}</div><div class="stat-lbl">Entities</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--accent3)">${types}</div><div class="stat-lbl">Types</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--accent2)">${entities.date.length}</div><div class="stat-lbl">Dates</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--tag-course-fg)">${entities.course.length}</div><div class="stat-lbl">Courses</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--tag-sem-fg)">${entities.sem.length}</div><div class="stat-lbl">Semesters</div></div>
+  `;
+}
+
+function buildEntityGrid(entities) {
+  let html = '';
+  for (const [type, arr] of Object.entries(entities)) {
+    const meta = ENTITY_META[type];
+    if (!arr.length) continue;
+    html += `
+      <div class="entity-card ${type}">
+        <div class="card-icon">${meta.icon}</div>
+        <div class="card-type">${meta.label}</div>
+        <div class="card-values">${arr.map(e=>`<span class="entity-tag ${type}">${escHtml(e.raw)}</span>`).join('')}</div>
+        <div class="card-count">${arr.length} found · ${arr.map(e=>escHtml(e.norm)).join(', ')}</div>
+      </div>`;
+  }
+  if (!html) html = `<div style="grid-column:1/-1"><div class="empty-state"><div class="empty-icon">🔎</div><div class="empty-text">No entities found. Try adding course codes (CS101), semester numbers (SEM 5), or dates (15 March).</div></div></div>`;
+  return html;
+}
+
+function buildMeta(intent, confidence, text, entities) {
+  const wordCount = text.split(/\s+/).filter(Boolean).length;
+  return `
+    <div class="meta-card">
+      <div class="meta-label">Detected Intent</div>
+      <div class="meta-value">${intent.icon} <span style="font-size:14px">${intent.label}</span></div>
+    </div>
+    <div class="meta-card">
+      <div class="meta-label">Extraction Confidence</div>
+      <div class="meta-value" style="color:var(--accent3)">${confidence}%</div>
+      <div class="confidence-bar"><div class="confidence-fill" style="width:${confidence}%"></div></div>
+    </div>
+    <div class="meta-card">
+      <div class="meta-label">Query Stats</div>
+      <div style="font-size:13px;line-height:2;font-family:'Space Mono',monospace;color:var(--muted)">
+        <div>Words: <span style="color:var(--text)">${wordCount}</span></div>
+        <div>Chars: <span style="color:var(--text)">${text.length}</span></div>
+        <div>Entity density: <span style="color:var(--text)">${Math.round(Object.values(entities).reduce((s,a)=>s+a.length,0)/wordCount*100)}%</span></div>
+      </div>
+    </div>
+    <div class="meta-card">
+      <div class="meta-label">Entity Summary</div>
+      <div style="font-size:12px;line-height:2;font-family:'Space Mono',monospace;color:var(--muted)">
+        ${Object.entries(entities).map(([t,a])=>`<div><span class="entity-tag ${t}" style="font-size:10px;padding:2px 7px;">${ENTITY_META[t].label}</span> <span style="color:var(--text)">${a.length}</span></div>`).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function addHistory(text, entities, intent) {
+  queryHistory.unshift({ text, entities, intent });
+  if (queryHistory.length > 6) queryHistory.pop();
+  renderHistory();
+}
+
+function renderHistory() {
+  const section = document.getElementById('historySection');
+  const list = document.getElementById('historyList');
+  if (!queryHistory.length) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  list.innerHTML = queryHistory.map((h, i) => `
+    <div class="history-item" onclick="loadHistory(${i})">
+      <div class="history-dot" style="background:${['var(--accent)','var(--accent3)','var(--accent2)','var(--accent4)'][i%4]}"></div>
+      <div class="history-text">${escHtml(h.text)}</div>
+      <div class="history-tags">
+        ${h.intent.icon}
+        ${Object.values(h.entities).reduce((s,a)=>s+a.length,0) > 0 ? `<span class="entity-tag course" style="font-size:10px;padding:2px 8px;">${Object.values(h.entities).reduce((s,a)=>s+a.length,0)} entities</span>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function loadHistory(i) {
+  document.getElementById('queryInput').value = queryHistory[i].text;
+  analyze();
+}
+
+function bindTooltips() {
+  const tt = document.getElementById('tooltip');
+  document.querySelectorAll('.hl').forEach(el => {
+    el.addEventListener('mousemove', e => {
+      const type = el.dataset.type;
+      const meta = ENTITY_META[type];
+      tt.textContent = `${meta.icon} ${meta.label}: ${el.dataset.val}`;
+      tt.style.opacity = '1';
+      tt.style.left = (e.clientX + 12) + 'px';
+      tt.style.top = (e.clientY - 30) + 'px';
+    });
+    el.addEventListener('mouseleave', () => { tt.style.opacity = '0'; });
+  });
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const names = ['entities','response','json','meta'];
+    t.classList.toggle('active', names[i] === name);
+  });
+  document.querySelectorAll('.tab-panel').forEach(p => {
+    p.classList.toggle('active', p.id === 'tab-'+name);
+  });
+}
+
+function copyJSON() {
+  if (!lastResult) return;
+  navigator.clipboard.writeText(JSON.stringify(lastResult, null, 2));
+  const btn = document.querySelector('.copy-btn');
+  btn.textContent = 'COPIED!';
+  setTimeout(() => btn.textContent = 'COPY', 1500);
+}
+
+function fillExample(el) {
+  document.getElementById('queryInput').value = el.textContent;
+  updateCharCount();
+  analyze();
+}
+
+function clearAll() {
+  document.getElementById('queryInput').value = '';
+  document.getElementById('results').classList.remove('visible');
+  updateCharCount();
+}
+
+function setBtnLoading(on) {
+  document.getElementById('btnIcon').innerHTML = on ? '<span class="spinner"></span>' : '⚡';
+  document.getElementById('btnText').textContent = on ? 'Analyzing...' : 'Analyze Query';
+  document.getElementById('analyzeBtn').disabled = on;
+}
+
+function shakeInput() {
+  const ta = document.getElementById('queryInput');
+  ta.style.animation = 'none';
+  ta.style.borderColor = 'var(--accent4)';
+  setTimeout(() => { ta.style.borderColor = ''; }, 800);
+}
+
+function updateCharCount() {
+  const len = document.getElementById('queryInput').value.length;
+  document.getElementById('charCount').textContent = `${len} chars`;
+}
+
+document.getElementById('queryInput').addEventListener('input', updateCharCount);
+document.getElementById('queryInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) analyze();
+});
+</script>
+</body>
+</html>
