@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assembly Line Object Counter - IoT Simulation</title>
+<meta name="description" content="Interactive assembly line simulation with inductive proximity sensor for metal part detection, counter display on LCD, and serial data output.">
+<link rel="stylesheet" href="style.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+<header>
+  <div class="header-glow"></div>
+  <h1>🏭 Assembly Line Object Counter</h1>
+  <p class="subtitle">IoT Simulation — Inductive Proximity Sensor + LCD Serial Display + Conveyor Belt</p>
+</header>
+
+<main>
+  <!-- LEFT: Simulation Panel -->
+  <section id="sim-panel" class="panel">
+    <h2>⚡ Live Simulation</h2>
+
+    <!-- Conveyor Belt Area -->
+    <div class="conveyor-area" id="conveyorArea">
+      <div class="conveyor-frame">
+        <div class="conveyor-label-top">CONVEYOR BELT SYSTEM</div>
+
+        <!-- Sensor Mounted Above Belt -->
+        <div class="sensor-mount" id="sensorMount">
+          <div class="sensor-body" id="sensorBody">
+            <div class="sensor-face" id="sensorFace"></div>
+            <div class="sensor-label">INDUCTIVE<br>SENSOR</div>
+          </div>
+          <div class="detection-zone" id="detectionZone"></div>
+        </div>
+
+        <!-- The Belt -->
+        <div class="belt-container">
+          <div class="belt" id="belt">
+            <div class="belt-pattern" id="beltPattern"></div>
+          </div>
+          <div class="roller roller-left"></div>
+          <div class="roller roller-right"></div>
+        </div>
+
+        <!-- Parts spawn and move here -->
+        <div class="parts-track" id="partsTrack"></div>
+      </div>
+    </div>
+
+    <!-- LCD Display -->
+    <div class="lcd-section">
+      <div class="lcd-frame">
+        <div class="lcd-label">16×2 LCD Display (I2C)</div>
+        <div class="lcd-screen" id="lcdScreen">
+          <div class="lcd-row" id="lcdRow1">Parts Count:   0</div>
+          <div class="lcd-row" id="lcdRow2">Status: READY   </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <button class="ctrl-btn start-btn" id="startBtn">▶ Start Conveyor</button>
+      <button class="ctrl-btn stop-btn" id="stopBtn" disabled>⏹ Stop Conveyor</button>
+      <button class="ctrl-btn reset-btn" id="resetBtn">🔄 Reset Counter</button>
+      <div class="speed-control">
+        <label>Belt Speed:</label>
+        <input type="range" id="speedSlider" min="1" max="5" value="3">
+        <span id="speedLabel">3</span>
+      </div>
+    </div>
+
+    <!-- Status Indicators -->
+    <div class="indicators">
+      <div class="indicator">
+        <div class="led" id="ledPower"></div>
+        <span>Power</span>
+      </div>
+      <div class="indicator">
+        <div class="led" id="ledSensor"></div>
+        <span>Sensor</span>
+      </div>
+      <div class="indicator">
+        <div class="led" id="ledMotor"></div>
+        <span>Motor</span>
+      </div>
+      <div class="indicator">
+        <div class="led" id="ledLCD"></div>
+        <span>LCD</span>
+      </div>
+    </div>
+
+    <!-- Serial Monitor -->
+    <div class="serial-monitor">
+      <div class="serial-header">
+        <span>📟 Serial Monitor (9600 baud)</span>
+        <button id="clearSerial" class="clear-btn">Clear</button>
+      </div>
+      <div class="serial-output" id="serialOutput"></div>
+    </div>
+  </section>
+
+  <!-- RIGHT: Circuit & Code Panel -->
+  <section id="info-panel" class="panel">
+    <div class="tab-bar">
+      <button class="tab active" data-tab="circuit" id="tabCircuit">🔌 Circuit Diagram</button>
+      <button class="tab" data-tab="code" id="tabCode">💻 Arduino Code</button>
+      <button class="tab" data-tab="hardware" id="tabHardware">🔩 Hardware Info</button>
+    </div>
+
+    <div class="tab-content" id="circuitTab">
+      <h3>Circuit Diagram</h3>
+      <div class="circuit-diagram" id="circuitDiagram">
+        <canvas id="circuitCanvas" width="540" height="620"></canvas>
+      </div>
+      <div class="component-list">
+        <h4>Components Used</h4>
+        <ul>
+          <li><span class="comp-dot blue"></span> Arduino Uno (Microcontroller)</li>
+          <li><span class="comp-dot cyan"></span> LJ12A3-4-Z/BX Inductive Proximity Sensor</li>
+          <li><span class="comp-dot green"></span> 16×2 LCD Display (I2C — PCF8574)</li>
+          <li><span class="comp-dot orange"></span> DC Motor + L298N Motor Driver</li>
+          <li><span class="comp-dot red"></span> 12V 2A Power Supply</li>
+          <li><span class="comp-dot gray"></span> 10kΩ Pull-down Resistor</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="tab-content hidden" id="codeTab">
+      <h3>Arduino Code</h3>
+      <div class="code-actions">
+        <button id="copyCode" class="copy-btn">📋 Copy Code</button>
+      </div>
+      <pre class="code-block"><code id="arduinoCode"></code></pre>
+    </div>
+
+    <div class="tab-content hidden" id="hardwareTab">
+      <h3>Hardware Components</h3>
+      <div class="hw-cards" id="hwCards"></div>
+    </div>
+  </section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
