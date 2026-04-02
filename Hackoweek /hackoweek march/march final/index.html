@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Parking System — IoT Simulation</title>
+  <meta name="description" content="Interactive Smart Parking System simulation using PIR sensors, servo barrier gate, LED indicators, and LCD display. Simulated for Tinkercad.">
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+<header>
+  <div class="header-glow"></div>
+  <h1>🅿️ Smart Parking System</h1>
+  <p class="subtitle">IoT Simulation — PIR Sensors + Servo Gate + LCD Display + LED Indicators</p>
+</header>
+
+<main>
+  <!-- LEFT: Simulation Panel -->
+  <section id="sim-panel" class="panel">
+    <h2>⚡ Live Simulation</h2>
+
+    <!-- Parking Lot Visualization -->
+    <div class="parking-lot" id="parkingLot">
+      <div class="lot-label">SMART PARKING LOT</div>
+
+      <!-- Entry Gate -->
+      <div class="gate-area entry-gate">
+        <div class="gate-label">ENTRY</div>
+        <div class="gate-post"></div>
+        <div class="gate-arm" id="entryArm">
+          <div class="arm-stripe"></div>
+          <div class="arm-stripe"></div>
+          <div class="arm-stripe"></div>
+        </div>
+        <div class="gate-post"></div>
+        <div class="pir-entry" id="pirEntry">
+          <div class="pir-lens" id="pirEntryLens"></div>
+          <div class="pir-label">PIR</div>
+        </div>
+      </div>
+
+      <!-- Parking Spots -->
+      <div class="spots-grid">
+        <div class="parking-spot" id="spot1" data-spot="1">
+          <div class="spot-number">P1</div>
+          <div class="spot-pir" id="pirSpot1"><div class="pir-mini-lens"></div></div>
+          <div class="spot-led" id="ledSpot1"></div>
+          <div class="car-silhouette" id="car1"></div>
+        </div>
+        <div class="parking-spot" id="spot2" data-spot="2">
+          <div class="spot-number">P2</div>
+          <div class="spot-pir" id="pirSpot2"><div class="pir-mini-lens"></div></div>
+          <div class="spot-led" id="ledSpot2"></div>
+          <div class="car-silhouette" id="car2"></div>
+        </div>
+        <div class="parking-spot" id="spot3" data-spot="3">
+          <div class="spot-number">P3</div>
+          <div class="spot-pir" id="pirSpot3"><div class="pir-mini-lens"></div></div>
+          <div class="spot-led" id="ledSpot3"></div>
+          <div class="car-silhouette" id="car3"></div>
+        </div>
+        <div class="parking-spot" id="spot4" data-spot="4">
+          <div class="spot-number">P4</div>
+          <div class="spot-pir" id="pirSpot4"><div class="pir-mini-lens"></div></div>
+          <div class="spot-led" id="ledSpot4"></div>
+          <div class="car-silhouette" id="car4"></div>
+        </div>
+      </div>
+
+      <!-- Exit Gate -->
+      <div class="gate-area exit-gate">
+        <div class="gate-label">EXIT</div>
+        <div class="gate-post"></div>
+        <div class="gate-arm" id="exitArm">
+          <div class="arm-stripe"></div>
+          <div class="arm-stripe"></div>
+          <div class="arm-stripe"></div>
+        </div>
+        <div class="gate-post"></div>
+        <div class="pir-exit" id="pirExit">
+          <div class="pir-lens" id="pirExitLens"></div>
+          <div class="pir-label">PIR</div>
+        </div>
+      </div>
+
+      <!-- Animated Car -->
+      <div class="animated-car" id="animatedCar">
+        <div class="car-body">
+          <div class="car-window"></div>
+          <div class="car-wheel car-wheel-front"></div>
+          <div class="car-wheel car-wheel-rear"></div>
+          <div class="car-headlight"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LCD Display -->
+    <div class="lcd-section">
+      <div class="lcd-frame">
+        <div class="lcd-label">16×2 LCD Display (I2C)</div>
+        <div class="lcd-screen" id="lcdScreen">
+          <div class="lcd-row" id="lcdRow1">Spots Free:  4/4</div>
+          <div class="lcd-row" id="lcdRow2">Status: READY   </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <button class="ctrl-btn auto-btn" id="autoBtn">▶ Auto Simulation</button>
+      <button class="ctrl-btn stop-btn" id="stopBtn" disabled>⏹ Stop</button>
+      <button class="ctrl-btn reset-btn" id="resetBtn">🔄 Reset All</button>
+    </div>
+
+    <!-- Manual Spot Controls -->
+    <div class="manual-controls">
+      <p class="manual-label">Click a parking spot to toggle car presence</p>
+    </div>
+
+    <!-- Status Indicators -->
+    <div class="indicators">
+      <div class="indicator">
+        <div class="led led-on" id="ledPower"></div>
+        <span>Power</span>
+      </div>
+      <div class="indicator">
+        <div class="led" id="ledEntry"></div>
+        <span>Entry PIR</span>
+      </div>
+      <div class="indicator">
+        <div class="led" id="ledExit"></div>
+        <span>Exit PIR</span>
+      </div>
+      <div class="indicator">
+        <div class="led" id="ledServo"></div>
+        <span>Servo</span>
+      </div>
+    </div>
+
+    <!-- Serial Monitor -->
+    <div class="serial-monitor">
+      <div class="serial-header">
+        <span>📟 Serial Monitor (9600 baud)</span>
+        <button id="clearSerial" class="clear-btn">Clear</button>
+      </div>
+      <div class="serial-output" id="serialOutput"></div>
+    </div>
+  </section>
+
+  <!-- RIGHT: Circuit & Code Panel -->
+  <section id="info-panel" class="panel">
+    <div class="tab-bar">
+      <button class="tab active" data-tab="circuit" id="tabCircuit">🔌 Circuit Diagram</button>
+      <button class="tab" data-tab="code" id="tabCode">💻 Arduino Code</button>
+      <button class="tab" data-tab="hardware" id="tabHardware">🔩 Hardware Info</button>
+    </div>
+
+    <div class="tab-content" id="circuitTab">
+      <h3>Circuit Diagram</h3>
+      <div class="circuit-diagram" id="circuitDiagram">
+        <canvas id="circuitCanvas" width="560" height="700"></canvas>
+      </div>
+      <div class="component-list">
+        <h4>Components Used</h4>
+        <ul>
+          <li><span class="comp-dot blue"></span> Arduino Uno R3 (Microcontroller)</li>
+          <li><span class="comp-dot red"></span> HC-SR501 PIR Motion Sensor ×4 (Parking Spots)</li>
+          <li><span class="comp-dot orange"></span> HC-SR501 PIR Motion Sensor ×2 (Entry/Exit Gates)</li>
+          <li><span class="comp-dot green"></span> 16×2 LCD Display (I2C — PCF8574)</li>
+          <li><span class="comp-dot purple"></span> SG90 Servo Motor ×2 (Barrier Gates)</li>
+          <li><span class="comp-dot yellow"></span> LEDs ×4 (Red/Green Spot Indicators)</li>
+          <li><span class="comp-dot gray"></span> 220Ω Resistors ×4</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="tab-content hidden" id="codeTab">
+      <h3>Arduino Code</h3>
+      <div class="code-actions">
+        <button id="copyCode" class="copy-btn">📋 Copy Code</button>
+      </div>
+      <pre class="code-block"><code id="arduinoCode"></code></pre>
+    </div>
+
+    <div class="tab-content hidden" id="hardwareTab">
+      <h3>Hardware Components</h3>
+      <div class="hw-cards" id="hwCards"></div>
+    </div>
+  </section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
